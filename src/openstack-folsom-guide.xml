@@ -197,29 +197,11 @@ EOF</programlisting></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get -y install mysql-server python-mysqldb</screen></para>
+                            :<screen>apt-get -y install rabbitmq-server</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Allow connection from the network
-                            :<programlisting>sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</programlisting></para>
-                    </listitem>
-                    <listitem>
-                        <para>Restart the service
-                            :<programlisting>service mysql restart</programlisting></para>
-                    </listitem>
-                    <listitem>
-                        <para>Create Databases, Users, Rights
-                            :<programlisting>mysql -u root -pstackops &lt;&lt;EOF 
-CREATE DATABASE nova; 
-GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE glance; 
-GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE keystone; 
-GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE quantum; 
-GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' IDENTIFIED BY 'password'; 
-FLUSH PRIVILEGES; 
-EOF</programlisting></para>
+                        <para>Create an user for OpenStack services with a password
+                            :<programlisting>rabbitmqctl add_user openstack password</programlisting></para>
                     </listitem>
                 </orderedlist>
             </para>
@@ -228,7 +210,77 @@ EOF</programlisting></para>
             <info>
                 <title>Keystone</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install keystone python-keystone python-keystoneclient</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Edit <emphasis role="bold">/etc/keystone/keystone.conf</emphasis>
+                            :<programlisting>[DEFAULT]
+admin_token = password
+bind_host = 0.0.0.0
+public_port = 5000
+admin_port = 35357
+compute_port = 8774
+verbose = True
+debug = True
+log_file = keystone.log
+log_dir = /var/log/keystone
+log_config = /etc/keystone/logging.conf
+
+[sql]
+connection = mysql://keystone:password@localhost:3306/keystone
+idle_timeout = 200
+
+[identity]
+driver = keystone.identity.backends.sql.Identity
+
+[catalog]
+driver = keystone.catalog.backends.sql.Catalog
+
+(...)</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para> Restart Keystone and create the tables in the database
+                            :<screen>service keystone restart
+keystone-manage db_sync</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Load environment variables :</para>
+                        <para>
+                            <itemizedlist>
+                                <listitem>
+                                    <para>Create <emphasis role="bold">novarc</emphasis> file
+                                        :<screen>export OS_TENANT_NAME=admin 
+export OS_USERNAME=admin 
+export OS_PASSWORD=password 
+export OS_AUTH_URL="http://localhost:5000/v2.0/"
+export SERVICE_ENDPOINT="http://localhost:35357/v2.0";
+export SERVICE_TOKEN=password</screen></para>
+                                </listitem>
+                            </itemizedlist>
+                        </para>
+                    </listitem>
+                    <listitem>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Load the variables
+                                    :<screen>source novarc
+echo "source novarc">>.bashrc</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <para>Fill Keystone database with datas
+                            :<screen>./keystone-data.sh</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Create Endpoints :<screen>./keystone-endpoints.sh</screen></para>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
         <section xml:id="Glance">
             <info>
@@ -250,13 +302,13 @@ EOF</programlisting></para>
         </section>
         <section xml:id="Open-vSwitch">
             <info>
-                <title>Keystone</title>
+                <title>Open-vSwitch</title>
             </info>
             <para>lol</para>
         </section>
         <section xml:id="Horizon">
             <info>
-                <title>Hoziron</title>
+                <title>Horizon</title>
             </info>
             <para>lol</para>
         </section>
@@ -291,7 +343,7 @@ EOF</programlisting></para>
         <info>
             <title>Credits</title>
         </info>
-        <para> Written by Emilien Macchi. This document has been release under Creative Commons –
-            Attribution-ShareAlike 3.0 </para>
+        <para> Written by Emilien Macchi.</para>
+        <para>This document has been release under Creative Commons – Attribution-ShareAlike 3.0 </para>
     </section>
 </article>
