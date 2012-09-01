@@ -1,0 +1,297 @@
+<?xml version="1.0"?>
+<article xmlns="http://docbook.org/ns/docbook" xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0">
+    <info>
+        <title>OpenStack Folsom Guide</title>
+        <subtitle>Guide for Ubuntu Precise</subtitle>
+        <subjectset>
+            <subject>
+                <subjectterm>OpenStack Folsom Guide for Ubuntu 12.04</subjectterm>
+            </subject>
+        </subjectset>
+        <author><personname>Emilien Macchi</personname></author>
+    </info>
+    <section xml:id="Introduction"><info>
+            <title>Introduction</title>
+        </info><para>I'm writing this document a few weeks before Folsom stable release. I could not
+            resist to share my experience with the community who can't wait the D Day (like me
+            actually !).</para><para>This document helps anyone who wants to deploy Folsom of
+            OpenStack for development purpose.</para>
+            <table frame="all">
+                <info>
+                    <title>Architecture and informations</title>
+                </info>
+                <tgroup cols="3">
+                <colspec colname="c1" colnum="1" colwidth="1.0*"/>
+                <colspec colname="c2" colnum="2" colwidth="1.0*"/>
+                <colspec colname="newCol3" colnum="3" colwidth="1*"/>
+                <thead>
+                    <row>
+                        <entry/>
+                        <entry>controller</entry>
+                        <entry>compute</entry>
+                    </row>
+                </thead>
+                <tbody>
+                    <row>
+                        <entry>Managment Network</entry>
+                        <entry>192.168.0.1/24</entry>
+                        <entry>192.168.0.2/24</entry>
+                    </row>
+                    <row>
+                        <entry>Hostname</entry>
+                        <entry>folsom-controller</entry>
+                        <entry>folsom-compute</entry>
+                    </row>
+                    <row>
+                        <entry>Services</entry>
+                        <entry>MySQL, RabbitMQ, Nova, Glance, Keystone, Quantum</entry>
+                        <entry>nova-compute, KVM, nova-api</entry>
+                    </row>
+                </tbody>
+            </tgroup></table>
+        <db:note
+            xmlns:db="http://docbook.org/ns/docbook">
+            <db:para> That's a basic architecture, of course you can add many compute nodes as you
+                want.</db:para>
+        </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going
+        to use "Folsom Testing Packages" which are very close from latest code.</para></section>
+    <section xml:id="Requirements"><info><title>Requirements</title></info>
+    
+    <para>You need at least two machines (virtual or physical) with 2 NIC. You need also to download
+            Ubuntu 12.04 (LTS).</para>
+    <db:note xmlns:db="http://docbook.org/ns/docbook"><db:para> Run all commands as the root user</db:para></db:note>
+  </section>
+    <section xml:id="Controller-Node"><info><title>Controller Node</title></info>
+        <section xml:id="Operating-Sytem">
+            <info>
+                <title>Operating System</title>
+            </info>
+            <orderedlist>
+                <listitem>
+                    <para>Install Ubuntu with this parameters :<itemizedlist>
+                            <listitem>
+                                <para>Time zone : <emphasis role="bold">UTC</emphasis></para>
+                            </listitem>
+                            <listitem>
+                                <para>Hostname : <emphasis role="bold"
+                                    >folsom-controller</emphasis></para>
+                            </listitem>
+                            <listitem>
+                                <para>Packages : <emphasis role="bold"
+                                    >OpenSSH-Server</emphasis></para>
+                            </listitem>
+                        </itemizedlist></para>
+                    <para> After OS Installation, reboot the server .</para>
+                </listitem>
+                <listitem>
+                    <para>Add the repository and upgrade Ubuntu
+                        :<screen>apt-get install -y python-software-properties
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
+apt-get update &amp;&amp; apt-get -y dist-upgrade</screen>Reboot the server.</para>
+                </listitem>
+                <listitem>
+                    <para>Configure the network :</para>
+                    <para><itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/network/interfaces</emphasis>
+                                    file :</para>
+                            </listitem>
+                        </itemizedlist><screen># Management Network
+auto eth0
+    iface eth0 inet static
+    address 192.168.0.1
+    netmask 255.255.255.0
+    gateway 192.168.0.254
+    dns-nameservers 8.8.8.8
+
+# Bridged Network
+auto eth1
+    iface eth1 inet manual
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on 
+    down ip link set $IFACE promisc off
+    down ifconfig $IFACE down</screen>Then,
+                        restart network service :<screen>service networking restart</screen></para>
+                    <para>
+                        <db:note xmlns:db="http://docbook.org/ns/docbook">
+                            <db:para>If <emphasis role="bold">eth1</emphasis> is connected to a
+                                Switch, it should be in tagged mode.</db:para>
+                        </db:note>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Enable <emphasis role="bold">IP forwarding</emphasis> :</para>
+                            </listitem>
+                        </itemizedlist>
+                        <programlisting>sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\1/' /etc/sysctl.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit the <emphasis role="bold">/etc/hosts</emphasis> file and
+                                    add <emphasis role="bold">folsom-controller</emphasis> &amp;
+                                        <emphasis role="bold">folsom-compute</emphasis> hostnames
+                                    with correct IP.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>Install &amp; Configure NTP :<itemizedlist>
+                            <listitem>
+                                <para>Install the package
+                                    :<screen>apt-get install -y ntp</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Configure <emphasis role="bold">/etc/ntp.conf</emphasis> file
+                                    :<screen>server ntp.ubuntu.com iburst
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Restart the service
+                                    :<screen>service ntp restart</screen></para>
+                            </listitem>
+                        </itemizedlist></para>
+                </listitem>
+            </orderedlist>
+        </section>
+        <section xml:id="MySQL">
+            <info>
+                <title>MySQL</title>
+            </info>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install mysql-server python-mysqldb</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Allow connection from the network
+                            :<programlisting>sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Restart the service
+                            :<programlisting>service mysql restart</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Create Databases, Users, Rights
+                            :<programlisting>mysql -u root -ppassword &lt;&lt;EOF 
+CREATE DATABASE nova; 
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE glance; 
+GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE keystone; 
+GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE quantum; 
+GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' IDENTIFIED BY 'password'; 
+FLUSH PRIVILEGES; 
+EOF</programlisting></para>
+                    </listitem>
+                </orderedlist>
+            </para>
+        </section>
+        <section xml:id="RabbitMQ">
+            <info>
+                <title>RabbitMQ</title>
+            </info>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install mysql-server python-mysqldb</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Allow connection from the network
+                            :<programlisting>sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Restart the service
+                            :<programlisting>service mysql restart</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Create Databases, Users, Rights
+                            :<programlisting>mysql -u root -pstackops &lt;&lt;EOF 
+CREATE DATABASE nova; 
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE glance; 
+GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE keystone; 
+GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'password'; 
+CREATE DATABASE quantum; 
+GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' IDENTIFIED BY 'password'; 
+FLUSH PRIVILEGES; 
+EOF</programlisting></para>
+                    </listitem>
+                </orderedlist>
+            </para>
+        </section>
+        <section xml:id="Keystone">
+            <info>
+                <title>Keystone</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Glance">
+            <info>
+                <title>Glance</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Nova">
+            <info>
+                <title>Nova</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Quantum">
+            <info>
+                <title>Quantum</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Open-vSwitch">
+            <info>
+                <title>Keystone</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Horizon">
+            <info>
+                <title>Hoziron</title>
+            </info>
+            <para>lol</para>
+        </section>
+  </section>
+    <section xml:id="Compute-Node"><info><title>Compute Node</title></info>
+        <section>
+            <info>
+                <title>Operating System</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Hypervisor">
+            <info>
+                <title>Hypervisor</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="Nova-Compute-and-API">
+            <info>
+                <title>Nova</title>
+            </info>
+            <para>lol</para>
+        </section>
+        <section xml:id="OpenvSwitch">
+            <info>
+                <title>Open-vSwitch</title>
+            </info>
+            <para>lol</para>
+        </section>
+    </section>
+    <section xml:id="Credits">
+        <info>
+            <title>Credits</title>
+        </info>
+        <para> Written by Emilien Macchi. This document has been release under Creative Commons –
+            Attribution-ShareAlike 3.0 </para>
+    </section>
+</article>
