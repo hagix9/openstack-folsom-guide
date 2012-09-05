@@ -12,9 +12,8 @@
     </info>
     <section xml:id="Introduction"><info>
             <title>Introduction</title>
-        </info><para>I'm writing this document a few weeks before Folsom stable release. I could not
-            resist to share my experience with the community who can't wait the D Day (like me
-            actually !).</para><para>This document helps anyone who wants to deploy Folsom of
+        </info><para>I'm writing this document a few weeks before Folsom stable release. I could not resist to
+            share my experience with the community.</para><para>This document helps anyone who wants to deploy Folsom of
             OpenStack for development purpose.</para>
             <table frame="all">
                 <info>
@@ -49,12 +48,11 @@
                     </row>
                 </tbody>
             </tgroup></table>
-        <db:note
-            xmlns:db="http://docbook.org/ns/docbook">
+        <db:note xmlns:db="http://docbook.org/ns/docbook">
             <db:para> That's a basic architecture, of course you can add many compute nodes as you
                 want.</db:para>
-        </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going
-        to use "Folsom Testing Packages" which are very close from latest code.</para></section>
+        </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use
+            "Folsom Testing Packages" which are built from master for each component.</para></section>
     <section xml:id="Requirements"><info><title>Requirements</title></info>
     
     <para>You need at least two machines (virtual or physical) with 2 NIC. You need also to download
@@ -62,7 +60,7 @@
     <db:note xmlns:db="http://docbook.org/ns/docbook"><db:para> Run all commands as the root user</db:para></db:note>
   </section>
     <section xml:id="Controller-Node"><info><title>Controller Node</title></info>
-        <section xml:id="Operating-Sytem">
+        <section xml:id="Operating-Sytem-Controller">
             <info>
                 <title>Operating System</title>
             </info>
@@ -73,12 +71,10 @@
                                 <para>Time zone : <emphasis role="bold">UTC</emphasis></para>
                             </listitem>
                             <listitem>
-                                <para>Hostname : <emphasis role="bold"
-                                    >folsom-controller</emphasis></para>
+                                <para>Hostname : <emphasis role="bold">folsom-controller</emphasis></para>
                             </listitem>
                             <listitem>
-                                <para>Packages : <emphasis role="bold"
-                                    >OpenSSH-Server</emphasis></para>
+                                <para>Packages : <emphasis role="bold">OpenSSH-Server</emphasis></para>
                             </listitem>
                         </itemizedlist></para>
                     <para> After OS Installation, reboot the server .</para>
@@ -87,7 +83,9 @@
                     <para>Add the repository and upgrade Ubuntu
                         :<screen>apt-get install -y python-software-properties
 add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
-apt-get update &amp;&amp; apt-get -y dist-upgrade</screen>Reboot the server.</para>
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-deps-staging
+apt-get update &amp;&amp; apt-get -y dist-upgrade</screen>Reboot
+                        the server.</para>
                 </listitem>
                 <listitem>
                     <para>Configure the network :</para>
@@ -135,7 +133,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
                     </para>
                 </listitem>
                 <listitem>
-                    <para>Install &amp; Configure NTP :<itemizedlist>
+                    <para>Install Configure NTP :<itemizedlist>
                             <listitem>
                                 <para>Install the package
                                     :<screen>apt-get install -y ntp</screen></para>
@@ -174,16 +172,25 @@ fudge 127.127.1.0 stratum 10</screen></para>
                     </listitem>
                     <listitem>
                         <para>Create Databases, Users, Rights
-                            :<programlisting>mysql -u root -ppassword &lt;&lt;EOF 
-CREATE DATABASE nova; 
-GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE glance; 
-GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE keystone; 
-GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'password'; 
-CREATE DATABASE quantum; 
-GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' IDENTIFIED BY 'password'; 
-FLUSH PRIVILEGES; 
+                            :<programlisting>mysql -u root -ppassword &lt;&lt;EOF
+CREATE DATABASE nova;
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' \
+    IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'192.168.0.1' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE cinder;
+GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE glance;
+GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE keystone;
+GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE quantum;
+GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' \
+    IDENTIFIED BY 'password';
+FLUSH PRIVILEGES;
 EOF</programlisting></para>
                     </listitem>
                 </orderedlist>
@@ -193,16 +200,16 @@ EOF</programlisting></para>
             <info>
                 <title>RabbitMQ</title>
             </info>
-            <para>
+                        <para>
                 <orderedlist>
                     <listitem>
-                        <para>Install the packages
-                            :<screen>apt-get -y install rabbitmq-server</screen></para>
-                    </listitem>
+                        <para>Install the packages :</para>
+
+                        <screen>apt-get -y install rabbitmq-server</screen></listitem>
                     <listitem>
-                        <para>Create an user for OpenStack services with a password
-                            :<programlisting>rabbitmqctl add_user openstack password</programlisting></para>
-                    </listitem>
+                        <para>Change the default password :</para>
+                       
+                        <screen>rabbitmqctl change_password guest password</screen></listitem>
                 </orderedlist>
             </para>
         </section>
@@ -262,11 +269,9 @@ export SERVICE_TOKEN=password</screen></para>
                                 </listitem>
                             </itemizedlist>
                         </para>
-                    </listitem>
-                    <listitem>
                         <itemizedlist>
                             <listitem>
-                                <para>Load the variables
+                                <para>Export the variables
                                     :<screen>source novarc
 echo "source novarc">>.bashrc</screen></para>
                             </listitem>
@@ -286,64 +291,558 @@ echo "source novarc">>.bashrc</screen></para>
             <info>
                 <title>Glance</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install glance glance-api python-glanceclient glance-common</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Glance :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/glance-api.conf</emphasis> and
+                                        <emphasis role="bold">/etc/glance-registry.conf</emphasis>
+                                    files and modify
+                                    :<screen>sql_connection = mysql://glance:password@localhost/glance
+admin_tenant_name = service
+admin_user = glance
+admin_password = password</screen>For
+                                        <emphasis role="bold">glance-api.conf</emphasis>, modify :
+                                    <screen>rabbit_password = password</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Restart Glance services
+                                    :<screen>service glance-api restart &amp;&amp; service glance-registry restart</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Create Glance tables into the database
+                                    :<screen>glance-manage db_sync</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Download and import Ubuntu 12.04 UEC Image
+                                    :<screen> wget http://smoser.brickies.net/ubuntu/ttylinux-uec/ttylinux-uec-amd64-12.1_2.6.35-22_1.tar.gz 
+tar xzvf ttylinux-uec-amd64-12.1_2.6.35-22_1.tar.gz 
+glance add name="TTY Linux" is_public=true container_format=ovf \
+    disk_format=qcow2 &lt; ttylinux-uec-amd64-12.1_2.6.35-22_1.img
+rm -rf ttylinux*</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Check if the image has been introduced in the index
+                                    :<screen>glance image-list
+
++--------+---------+-------------+------------------+------------+--------+
+| ID     | Name    | Disk Format | Container Format | Size       | Status |
++--------+---------+-------------+------------------+------------+--------+
+| 9a17961| Ubuntu  | qcow2       | ovf              | 1476395008 | active |
++--------+---------+-------------+------------------+------------+--------+</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
         <section xml:id="Nova">
             <info>
                 <title>Nova</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install nova-api nova-cert nova-common \
+    nova-scheduler python-nova python-novaclient nova-consoleauth novnc</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Nova :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/nova/api-paste.ini</emphasis>
+                                    file and modify
+                                    :<screen>admin_tenant_name = service 
+admin_user = nova 
+admin_password = password</screen>You
+                                    should also <emphasis role="bold">delete</emphasis> each
+                                    composite with "<emphasis role="bold">volume</emphasis>".</para>
+                                <para>We can do that manually or with this command
+                                    :<screen>cat /etc/nova/api-paste.ini |grep -v "volume" > paste.ini &amp;&amp; mv paste.ini /etc/nova/api-paste.ini</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/nova/nova.conf</emphasis> file
+                                    and modify
+                                    :<screen>[DEFAULT]
+
+# MySQL Connection #
+sql_connection=mysql://nova:password@192.168.0.1/nova
+
+# nova-scheduler #
+rabbit_password=password
+scheduler_driver=nova.scheduler.simple.SimpleScheduler
+
+# nova-api #
+cc_host=192.168.0.1
+auth_strategy=keystone
+s3_host=192.168.0.1
+ec2_host=192.168.0.1
+nova_url=http://192.168.0.1:8774/v1.1/
+ec2_url=http://192.168.0.1:8773/services/Cloud
+keystone_ec2_url=http://192.168.0.1:5000/v2.0/ec2tokens
+api_paste_config=/etc/nova/api-paste.ini
+allow_admin_api=true
+use_deprecated_auth=false
+ec2_private_dns_show_ip=True
+dmz_cidr=169.254.169.254/32
+ec2_dmz_host=169.254.169.254
+metadata_host=169.254.169.254
+enabled_apis=ec2,osapi_compute,metadata
+
+# Networking #
+network_api_class=nova.network.quantumv2.api.API
+quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
+quantum_auth_strategy=keystone
+quantum_url=http://192.168.0.1:9696
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+libvirt_use_virtio_for_bridges=True
+
+# Cinder #
+volume_api_class=cinder.volume.api.API
+
+# Glance #
+glance_api_servers=192.168.0.1:9292
+image_service=nova.image.glance.GlanceImageService
+
+# novnc #
+novnc_enable=true
+novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
+vncserver_proxyclient_address=127.0.0.1
+vncserver_listen=0.0.0.0
+
+# Misc #
+logdir=/var/log/nova
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+root_helper=sudo nova-rootwrap /etc/nova/rootwrap.conf
+verbose=true</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Create Nova tables into the database
+                                    :<screen>nova-manage db sync</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Restart Nova services
+                                    :<screen>service nova-api restart
+service nova-cert restart
+service consoleauth restart
+service nova-scheduler restart
+service novnc restart</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
         <section xml:id="Quantum">
             <info>
                 <title>Quantum</title>
             </info>
-            <para>lol</para>
-        </section>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch</screen>
+                            If you have an error like
+                            :<screen>E: Sub-process /usr/bin/dpkg returned an error code (1)</screen></para>
+                        <para>You should force the configuration
+                            :<programlisting>dpkg --force-all --configure -a</programlisting></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Quantum :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/quantum.conf</emphasis> file and modify
+                                    :<screen>core_plugin = \
+    quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
+auth_strategy = keystone
+rabbit_host = localhost
+rabbit_password = password</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
+                                    file and modify
+                                    :<screen>sql_connection = mysql://quantum:password@localhost:3306/quantum
+network_vlan_ranges = default:1000:2999
+tunnel_id_ranges =
+integration_bridge = br-int
+bridge_mappings = default:br-eth1</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/api-paste.ini</emphasis> file and modify
+                                    :<screen>admin_tenant_name = service
+admin_user = quantum 
+admin_password = password</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>        </section>
         <section xml:id="Open-vSwitch">
             <info>
                 <title>Open-vSwitch</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Open-vSwitch :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Create the Integration Dridge
+                                    :<programlisting>ovs-vsctl add-br br-int</programlisting></para>
+                            </listitem>
+                            <listitem>
+                                <para>Create the physical Network Bridge
+                                    :<screen>ovs-vsctl add-br br-eth1
+ovs-vsctl add-port br-eth1 eth1</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
+        <section xml:id="Cinder">
+            <info>
+                <title>Cinder</title>
+            </info>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume </screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Cinder :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/cinder/cinder.conf</emphasis>
+                                    file and modify
+                                    :<screen>[DEFAULT]
+rootwrap_config = /etc/cinder/rootwrap.conf
+sql_connection = mysql://cinder:password@localhost:3306/cinder
+volume_group = cinder
+rabbit_host="localhost"
+rabbit_password="password"</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/cinder/api-paste.ini</emphasis> file and modify
+                                    :<screen>admin_tenant_name = service
+admin_user = cinder 
+admin_password = password</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Create the volume
+                                    :<screen>fdisk /dev/sdb
+
+[Create a Linux partition]
+
+pvcreate /dev/sdb1
+vgcreate cinder-volumes /dev/sdb1</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Create Cinder tables into the database
+                                    :<screen>cinder-manage db sync</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Restart the services :
+                                    :<screen>service cinder-api restart
+service cinder-schedule restart
+service cinder-volume restart</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para></section>
         <section xml:id="Horizon">
             <info>
                 <title>Horizon</title>
             </info>
-            <para>lol</para>
+                        <para>Since all dependences have not been yet introduced into Ubuntu 12.04,
+                we need to download <emphasis role="bold">python-openstack-auth</emphasis> from
+                Quantal.</para>
+                        <para>Install the packages
+                :<screen>apt-get -y install python-django
+wget http://goo.gl/bJQt8
+dpkg -i python-openstack-auth*.deb
+apt-get -f install
+apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
+    memcached python-memcache</screen>
+            </para>
         </section>
   </section>
     <section xml:id="Compute-Node"><info><title>Compute Node</title></info>
-        <section>
+        <section xml:id="Operating-Sytem-Compute-1">
             <info>
                 <title>Operating System</title>
             </info>
-            <para>lol</para>
+            <orderedlist>
+                <listitem>
+                    <para>Install Ubuntu with this parameters :<itemizedlist>
+                        <listitem>
+                            <para>Time zone : <emphasis role="bold">UTC</emphasis></para>
+                        </listitem>
+                        <listitem>
+                            <para>Hostname : <emphasis role="bold">folsom-compute</emphasis></para>
+                        </listitem>
+                        <listitem>
+                            <para>Packages : <emphasis role="bold">OpenSSH-Server</emphasis></para>
+                        </listitem>
+                    </itemizedlist></para>
+                    <para> After OS Installation, reboot the server .</para>
+                </listitem>
+                <listitem>
+                    <para>Add the repository and upgrade Ubuntu
+                        :<screen>apt-get install -y python-software-properties
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-deps-staging
+apt-get update &amp;&amp; apt-get -y dist-upgrade</screen>Reboot
+                        the server.</para>
+                </listitem>
+                <listitem>
+                    <para>Configure the network :</para>
+                    <para><itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/network/interfaces</emphasis>
+                                    file :</para>
+                            </listitem>
+                        </itemizedlist><screen># Management Network
+auto eth0
+    iface eth0 inet static
+    address 192.168.0.2
+    netmask 255.255.255.0
+    gateway 192.168.0.254
+    dns-nameservers 8.8.8.8
+
+# Bridged Network
+auto eth1
+    iface eth1 inet manual
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on 
+    down ip link set $IFACE promisc off
+    down ifconfig $IFACE down</screen>Then,
+                        restart network service :<screen>service networking restart</screen></para>
+                    <para>
+                        <db:note xmlns:db="http://docbook.org/ns/docbook">
+                            <db:para>If <emphasis role="bold">eth1</emphasis> is connected to a
+                                Switch, it should be in tagged mode.</db:para>
+                        </db:note>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Enable <emphasis role="bold">IP forwarding</emphasis> :</para>
+                            </listitem>
+                        </itemizedlist>
+                        <programlisting>sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\1/' /etc/sysctl.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit the <emphasis role="bold">/etc/hosts</emphasis> file and
+                                    add <emphasis role="bold">folsom-controller</emphasis> &amp;
+                                    <emphasis role="bold">folsom-compute</emphasis> hostnames
+                                    with correct IP.</para>
+                            </listitem>
+                        </itemizedlist>
+                    </para>
+                </listitem>
+                <listitem>
+                    <para>Install &amp; Configure NTP :<itemizedlist>
+                        <listitem>
+                            <para>Install the package
+                                :<screen>apt-get install -y ntp</screen></para>
+                        </listitem>
+                        <listitem>
+                            <para>Configure <emphasis role="bold">/etc/ntp.conf</emphasis> file
+                                    :<screen>server 192.168.0.1</screen></para>
+                        </listitem>
+                        <listitem>
+                            <para>Restart the service
+                                :<screen>service ntp restart</screen></para>
+                        </listitem>
+                    </itemizedlist></para>
+                </listitem>
+            </orderedlist>
         </section>
         <section xml:id="Hypervisor">
             <info>
                 <title>Hypervisor</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get install -y kvm libvirt-bin</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure libvirt :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/libvirt/qemu.conf</emphasis>
+                                    file and add
+                                    :<screen>cgroup_device_acl = [
+    "/dev/null", "/dev/full", "/dev/zero",
+    "/dev/random", "/dev/urandom",
+    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+    "/dev/rtc", "/dev/hpet","/dev/net/tun",
+]</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Allow <emphasis role="bold">Live Migrations</emphasis>
+                                    :</para>
+                                <para>Edit  <emphasis role="bold"
+                                        >/etc/libvirt/libvirtd.conf</emphasis> file
+                                    :<programlisting>listen_tls = 0
+listen_tcp = 1
+auth_tcp = "none" </programlisting></para>
+                                <para>Modify libvirtd_opts variable in <emphasis role="bold"
+                                        >/etc/init/libvirt-bin.conf</emphasis> file
+                                    :<screen>env libvirtd_opts="-d -l" </screen></para>
+                                <para>Edit  <emphasis role="bold"
+                                        >/etc/default/libvirt-bin</emphasis> file
+                                    :<screen>libvirtd_opts="-d -l"   </screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Restart libvirt
+                                    :<screen>service libvirt-bin restart</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
         <section xml:id="Nova-Compute-and-API">
             <info>
                 <title>Nova</title>
             </info>
-            <para>lol</para>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages
+                            :<screen>apt-get -y install nova-api nova-cert nova-common nova-network \
+    nova-scheduler python-nova python-novaclient nova-consoleauth novnc</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Nova :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/nova/api-paste.ini</emphasis>
+                                    file and modify
+                                    :<screen>admin_tenant_name = service 
+admin_user = nova 
+admin_password = password</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/nova/nova.conf</emphasis> file
+                                    and modify
+                                    :<screen>[DEFAULT]
+
+# MySQL Connection #
+sql_connection=mysql://nova:password@192.168.0.1/nova
+
+# nova-scheduler #
+rabbit_host=192.168.0.1
+rabbit_password=password
+scheduler_driver=nova.scheduler.simple.SimpleScheduler
+
+# nova-api #
+cc_host=192.168.0.1
+auth_strategy=keystone
+s3_host=192.168.0.1
+ec2_host=192.168.0.1
+nova_url=http://192.168.0.1:8774/v1.1/
+ec2_url=http://192.168.0.1:8773/services/Cloud
+keystone_ec2_url=http://192.168.0.1:5000/v2.0/ec2tokens
+api_paste_config=/etc/nova/api-paste.ini
+allow_admin_api=true
+use_deprecated_auth=false
+dmz_cidr=169.254.169.254/32
+ec2_dmz_host=169.254.169.254
+metadata_host=169.254.169.254
+
+# Networking #
+network_api_class=nova.network.quantumv2.api.API
+quantum_admin_auth_url=http://192.168.2.130:35357/v2.0
+quantum_auth_strategy=keystone
+quantum_url=http://192.168.0.1:9696
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+
+# Cinder #
+volume_api_class=cinder.volume.api.API
+
+# Glance #
+glance_api_servers=192.168.0.1:9292
+image_service=nova.image.glance.GlanceImageService
+
+# novnc #
+novnc_enable=true
+novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
+vncserver_proxyclient_address=127.0.0.1
+vncserver_listen=0.0.0.0
+
+# Misc #
+logdir=/var/log/nova
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+root_helper=sudo nova-rootwrap
+verbose=true</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Restart Nova services
+                                    :<screen>service nova-api restart
+service nova-compute restart</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                </orderedlist>
+            </para>
         </section>
         <section xml:id="OpenvSwitch">
             <info>
                 <title>Open-vSwitch</title>
             </info>
-            <para>lol</para>
+            <para>Need to be written</para>
         </section>
     </section>
     <section xml:id="Credits">
         <info>
             <title>Credits</title>
         </info>
-        <para> Written by Emilien Macchi.</para>
-        <para>This document has been release under Creative Commons – Attribution-ShareAlike 3.0 </para>
+        <section xml:id="Thanks">
+            <info>
+                <title>Thank's to ...</title>
+            </info>
+            <para>Need to be written</para>
+        </section>
+        <section xml:id="License">
+            <info>
+                <title>License</title>
+            </info>
+            <para>This document has been release under Creative Commons – Attribution-ShareAlike
+                3.0.</para>
+            <para>You are also free to copy, distribute and adapt transmit the work.</para>
+        </section>
+        <section xml:id="Author">
+            <info>
+                <title>About the author</title>
+            </info>
+            <para>Need to be written</para>
+        </section>
     </section>
 </article>
