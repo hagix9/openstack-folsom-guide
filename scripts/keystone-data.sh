@@ -15,7 +15,7 @@
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-password}
 SERVICE_PASSWORD=${SERVICE_PASSWORD:-$ADMIN_PASSWORD}
 export SERVICE_TOKEN="password"
-export SERVICE_ENDPOINT="http://folsom-controller:35357/v2.0"
+export SERVICE_ENDPOINT="http://localhost:35357/v2.0"
 SERVICE_TENANT_NAME=${SERVICE_TENANT_NAME:-service}
 
 get_id () {
