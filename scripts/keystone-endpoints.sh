@@ -25,7 +25,7 @@ SERVICE_TOKEN=password
 SERVICE_ENDPOINT="http://localhost:35357/v2.0"
 
 # other definitions
-MASTER="192.168.0.1"
+MASTER="192.168.2.133"
 
 while getopts "u:D:p:m:K:R:E:S:T:vh" opt; do
   case $opt in
@@ -115,19 +115,19 @@ keystone service-create --name quantum --type network --description 'OpenStack N
 create_endpoint () {
   case $1 in
     compute)
-    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8774/v2/%(tenant_id)s' --adminurl 'http://'"$MASTER"':8774/v2/%(tenant_id)s' --internalurl 'http://'"$MASTER"':8774/v2/%(tenant_id)s'
+    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8774/v2/$(tenant_id)s' --adminurl 'http://'"$MASTER"':8774/v2/$(tenant_id)s' --internalurl 'http://'"$MASTER"':8774/v2/$(tenant_id)s'
     ;;
     volume)
-    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8776/v1/%(tenant_id)s' --adminurl 'http://'"$MASTER"':8776/v1/%(tenant_id)s' --internalurl 'http://'"$MASTER"':8776/v1/%(tenant_id)s'
+    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8776/v1/$(tenant_id)s' --adminurl 'http://'"$MASTER"':8776/v1/$(tenant_id)s' --internalurl 'http://'"$MASTER"':8776/v1/$(tenant_id)s'
     ;;
     image)
     keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9292/v2' --adminurl 'http://'"$MASTER"':9292/v2' --internalurl 'http://'"$MASTER"':9292/v2'
     ;;
     object-store)
     if [ $SWIFT_MASTER ]; then
-      keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$SWIFT_MASTER"':8080/v1/AUTH_%(tenant_id)s' --adminurl 'http://'"$SWIFT_MASTER"':8080/v1' --internalurl 'http://'"$SWIFT_MASTER"':8080/v1/AUTH_%(tenant_id)s'
+      keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$SWIFT_MASTER"':8080/v1/AUTH_$(tenant_id)s' --adminurl 'http://'"$SWIFT_MASTER"':8080/v1' --internalurl 'http://'"$SWIFT_MASTER"':8080/v1/AUTH_$(tenant_id)s'
     else
-      keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8080/v1/AUTH_%(tenant_id)s' --adminurl 'http://'"$MASTER"':8080/v1' --internalurl 'http://'"$MASTER"':8080/v1/AUTH_%(tenant_id)s'
+      keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8080/v1/AUTH_$(tenant_id)s' --adminurl 'http://'"$MASTER"':8080/v1' --internalurl 'http://'"$MASTER"':8080/v1/AUTH_$(tenant_id)s'
     fi
     ;;
     identity)
@@ -137,7 +137,7 @@ create_endpoint () {
     keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8773/services/Cloud' --adminurl 'http://'"$MASTER"':8773/services/Admin' --internalurl 'http://'"$MASTER"':8773/services/Cloud'
     ;;
     network)
-    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9696' --adminurl 'http://'"$MASTER"':9696' --internalurl 'http://'"$MASTER"':9696'
+    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9696/' --adminurl 'http://'"$MASTER"':9696/' --internalurl 'http://'"$MASTER"':9696/'
     ;;
   esac
 }
