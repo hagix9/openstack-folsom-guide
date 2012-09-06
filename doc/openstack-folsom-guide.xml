@@ -49,8 +49,8 @@
                 </tbody>
             </tgroup></table>
         <db:note xmlns:db="http://docbook.org/ns/docbook">
-            <db:para> That's a basic architecture, of course you can add many compute nodes as you
-                want.</db:para>
+            <db:para> That's a basic architecture, of course <emphasis role="bold">you can add many
+                    compute nodes as you want</emphasis>.</db:para>
         </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use
             "Folsom Testing Packages" which are built from master for each component.</para></section>
     <section xml:id="Requirements"><info><title>Requirements</title></info>
@@ -322,12 +322,12 @@ admin_password = password</screen>For
                                     :<screen>glance-manage db_sync</screen></para>
                             </listitem>
                             <listitem>
-                                <para>Download and import Ubuntu 12.04 UEC Image
-                                    :<screen> wget http://smoser.brickies.net/ubuntu/ttylinux-uec/ttylinux-uec-amd64-12.1_2.6.35-22_1.tar.gz 
-tar xzvf ttylinux-uec-amd64-12.1_2.6.35-22_1.tar.gz 
-glance add name="TTY Linux" is_public=true container_format=ovf \
-    disk_format=qcow2 &lt; ttylinux-uec-amd64-12.1_2.6.35-22_1.img
-rm -rf ttylinux*</screen></para>
+                                <para>Download and import <link
+                                        xlink:href="http://smoser.brickies.net/ubuntu/ttylinux-uec/ttylinux-uec-amd64-12.1_2.6.35-22_1.tar.gz "
+                                        >Ubuntu 12.04 UEC Image</link>
+                                    :<screen>tar xzvf ubuntu-12.04-server-cloudimg-amd64.tar.gz
+glance add name="Ubuntu" is_public=true container_format=ovf \
+    disk_format=qcow2 &lt; precise-server-cloudimg-amd64.img</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Check if the image has been introduced in the index
@@ -338,6 +338,13 @@ rm -rf ttylinux*</screen></para>
 +--------+---------+-------------+------------------+------------+--------+
 | 9a17961| Ubuntu  | qcow2       | ovf              | 1476395008 | active |
 +--------+---------+-------------+------------------+------------+--------+</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>If you want to install Glance Replicator (new in Folsom)
+                                    :<screen>https://review.openstack.org/#/c/7615/</screen> More
+                                    informations about it <link
+                                        xlink:href="http://www.stillhq.com/openstack/000007.html"
+                                        >here</link>.</para>
                             </listitem>
                         </itemizedlist>
                     </listitem>
@@ -367,7 +374,8 @@ admin_password = password</screen>You
                                     should also <emphasis role="bold">delete</emphasis> each
                                     composite with "<emphasis role="bold">volume</emphasis>".</para>
                                 <para>We can do that manually or with this command
-                                    :<screen>cat /etc/nova/api-paste.ini |grep -v "volume" > paste.ini &amp;&amp; mv paste.ini /etc/nova/api-paste.ini</screen></para>
+                                    :<screen>cat /etc/nova/api-paste.ini |grep -v "volume" > paste.ini
+mv paste.ini /etc/nova/api-paste.ini</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold">/etc/nova/nova.conf</emphasis> file
