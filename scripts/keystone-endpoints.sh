@@ -25,7 +25,7 @@ SERVICE_TOKEN=password
 SERVICE_ENDPOINT="http://localhost:35357/v2.0"
 
 # other definitions
-MASTER="192.168.2.133"
+MASTER="192.168.0.1"
 
 while getopts "u:D:p:m:K:R:E:S:T:vh" opt; do
   case $opt in

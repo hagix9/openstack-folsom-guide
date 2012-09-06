@@ -178,6 +178,8 @@ GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' \
     IDENTIFIED BY 'password';
 GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'192.168.0.1' \
     IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'192.168.0.2' \
+    IDENTIFIED BY 'password';
 CREATE DATABASE cinder;
 GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' \
     IDENTIFIED BY 'password';
@@ -400,12 +402,17 @@ enabled_apis=ec2,osapi_compute,metadata
 network_api_class=nova.network.quantumv2.api.API
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
 quantum_auth_strategy=keystone
+quantum_admin_tenant_name=service
+quantum_admin_username=quantum
+quantum_admin_password=password
 quantum_url=http://192.168.0.1:9696
+libvirt_vif_type=ethernet
+linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 libvirt_use_virtio_for_bridges=True
 
 # Cinder #
-volume_api_class=cinder.volume.api.API
+volume_api_class=nova.volume.cinder.API
 
 # Glance #
 glance_api_servers=192.168.0.1:9292
@@ -464,7 +471,6 @@ service novnc restart</screen></para>
                                     :<screen>core_plugin = \
     quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
 auth_strategy = keystone
-rabbit_host = localhost
 rabbit_password = password</screen></para>
                             </listitem>
                             <listitem>
@@ -577,9 +583,8 @@ service cinder-volume restart</screen></para>
                 Quantal.</para>
                         <para>Install the packages
                 :<screen>apt-get -y install python-django
-wget http://goo.gl/bJQt8
+wget http://mirror.ovh.net/ubuntu//pool/main/p/python-django-openstack-auth/python-openstack-auth_1.0.1-0ubuntu6_all.deb
 dpkg -i python-openstack-auth*.deb
-apt-get -f install
 apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
     memcached python-memcache</screen>
             </para>
@@ -735,8 +740,7 @@ auth_tcp = "none" </programlisting></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get -y install nova-api nova-cert nova-common nova-network \
-    nova-scheduler python-nova python-novaclient nova-consoleauth novnc</screen></para>
+                            :<screen>apt-get -y install nova-api nova-compute-kvm</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Nova :</para>
@@ -753,55 +757,7 @@ admin_password = password</screen></para>
                                     and modify
                                     :<screen>[DEFAULT]
 
-# MySQL Connection #
-sql_connection=mysql://nova:password@192.168.0.1/nova
-
-# nova-scheduler #
-rabbit_host=192.168.0.1
-rabbit_password=password
-scheduler_driver=nova.scheduler.simple.SimpleScheduler
-
-# nova-api #
-cc_host=192.168.0.1
-auth_strategy=keystone
-s3_host=192.168.0.1
-ec2_host=192.168.0.1
-nova_url=http://192.168.0.1:8774/v1.1/
-ec2_url=http://192.168.0.1:8773/services/Cloud
-keystone_ec2_url=http://192.168.0.1:5000/v2.0/ec2tokens
-api_paste_config=/etc/nova/api-paste.ini
-allow_admin_api=true
-use_deprecated_auth=false
-dmz_cidr=169.254.169.254/32
-ec2_dmz_host=169.254.169.254
-metadata_host=169.254.169.254
-
-# Networking #
-network_api_class=nova.network.quantumv2.api.API
-quantum_admin_auth_url=http://192.168.2.130:35357/v2.0
-quantum_auth_strategy=keystone
-quantum_url=http://192.168.0.1:9696
-firewall_driver=nova.virt.firewall.NoopFirewallDriver
-
-# Cinder #
-volume_api_class=cinder.volume.api.API
-
-# Glance #
-glance_api_servers=192.168.0.1:9292
-image_service=nova.image.glance.GlanceImageService
-
-# novnc #
-novnc_enable=true
-novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
-vncserver_proxyclient_address=127.0.0.1
-vncserver_listen=0.0.0.0
-
-# Misc #
-logdir=/var/log/nova
-state_path=/var/lib/nova
-lock_path=/var/lock/nova
-root_helper=sudo nova-rootwrap
-verbose=true</screen></para>
+need to be written</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Restart Nova services
@@ -828,7 +784,9 @@ service nova-compute restart</screen></para>
             <info>
                 <title>Thank's to ...</title>
             </info>
-            <para>Need to be written</para>
+            <para>John Griffith - SolidFire</para>
+            <para>Martin Loschwitz - Hastexo</para>
+            <para>Adam Gandelman  - Canonical</para>
         </section>
         <section xml:id="License">
             <info>
