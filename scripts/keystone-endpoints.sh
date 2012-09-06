@@ -105,7 +105,7 @@ if [ -n "$missing_args" ]; then
 fi
  
 keystone service-create --name nova --type compute --description 'OpenStack Compute Service'
-keystone service-create --name volume --type volume --description 'OpenStack Volume Service'
+keystone service-create --name cinder --type volume --description 'OpenStack Volume Service'
 keystone service-create --name glance --type image --description 'OpenStack Image Service'
 keystone service-create --name swift --type object-store --description 'OpenStack Storage Service'
 keystone service-create --name keystone --type identity --description 'OpenStack Identity'
