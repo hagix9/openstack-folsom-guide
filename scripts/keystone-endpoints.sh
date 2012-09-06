@@ -137,7 +137,7 @@ create_endpoint () {
     keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8773/services/Cloud' --adminurl 'http://'"$MASTER"':8773/services/Admin' --internalurl 'http://'"$MASTER"':8773/services/Cloud'
     ;;
     network)
-    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9696/' --adminurl 'http://'"$MASTER"':9696/' --internalurl 'http://'"$MASTER"':9696/'
+    keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9696' --adminurl 'http://'"$MASTER"':9696' --internalurl 'http://'"$MASTER"':9696'
     ;;
   esac
 }
