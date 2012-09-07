@@ -1,0 +1,429 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"><head><title>OpenStack Folsom Guide</title><meta name="generator" content="DocBook XSL Stylesheets V1.77.1"/></head><body><div class="article"><div class="titlepage"><div><div><h1 class="title"><a id="d5e1"/>OpenStack Folsom Guide</h1></div><div><h3 class="subtitle"><em>Guide for Ubuntu Precise</em></h3></div><div><div class="author"><h3 class="author">Emilien Macchi</h3></div></div></div><hr/></div><div class="toc"><p><strong>Table of Contents</strong></p><dl><dt><span class="section"><a href="#Introduction">Introduction</a></span></dt><dt><span class="section"><a href="#Requirements">Requirements</a></span></dt><dt><span class="section"><a href="#Controller-Node">Controller Node</a></span></dt><dd><dl><dt><span class="section"><a href="#Operating-Sytem-Controller">Operating System</a></span></dt><dt><span class="section"><a href="#MySQL">MySQL</a></span></dt><dt><span class="section"><a href="#RabbitMQ">RabbitMQ</a></span></dt><dt><span class="section"><a href="#Keystone">Keystone</a></span></dt><dt><span class="section"><a href="#Glance">Glance</a></span></dt><dt><span class="section"><a href="#Nova">Nova</a></span></dt><dt><span class="section"><a href="#Quantum">Quantum</a></span></dt><dt><span class="section"><a href="#Open-vSwitch">Open-vSwitch</a></span></dt><dt><span class="section"><a href="#Cinder">Cinder</a></span></dt><dt><span class="section"><a href="#Horizon">Horizon</a></span></dt></dl></dd><dt><span class="section"><a href="#Compute-Node">Compute Node</a></span></dt><dd><dl><dt><span class="section"><a href="#Operating-Sytem-Compute-1">Operating System</a></span></dt><dt><span class="section"><a href="#Hypervisor">Hypervisor</a></span></dt><dt><span class="section"><a href="#Nova-Compute-and-API">Nova</a></span></dt><dt><span class="section"><a href="#OpenvSwitch">Open-vSwitch</a></span></dt></dl></dd><dt><span class="section"><a href="#Credits">Credits</a></span></dt><dd><dl><dt><span class="section"><a href="#Thanks">Thank's to ...</a></span></dt><dt><span class="section"><a href="#License">License</a></span></dt><dt><span class="section"><a href="#Author">About the author</a></span></dt></dl></dd></dl></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Introduction"/>Introduction</h2></div></div></div><p>I'm writing this document a few weeks before Folsom stable release. I could not resist to
+            share my experience with the community.</p><p>This document helps anyone who wants to deploy Folsom of
+            OpenStack for development purpose.</p><div class="table"><a id="d5e15"/><p class="title"><strong>Table 1. Architecture and informations</strong></p><div class="table-contents"><table border="1"><colgroup><col class="c1"/><col class="c2"/><col class="newCol3"/></colgroup><thead><tr><th> </th><th>controller</th><th>compute</th></tr></thead><tbody><tr><td>Managment Network</td><td>192.168.0.1/24</td><td>192.168.0.2/24</td></tr><tr><td>Hostname</td><td>folsom-controller</td><td>folsom-compute</td></tr><tr><td>Services</td><td>MySQL, RabbitMQ, Nova, Glance, Keystone, Quantum</td><td>nova-compute, KVM, nova-api</td></tr></tbody></table></div></div><br class="table-break"/><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> That's a basic architecture, of course <span class="bold"><strong>you can add many
+                    compute nodes as you want</strong></span>.</p></td></tr></table></div><p>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use "<a class="link" href="https://launchpad.net/~openstack-ubuntu-testing/+archive/folsom-trunk-testing" target="_top">Folsom Testing Packages</a>" which are built from master for each
+            component.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Requirements"/>Requirements</h2></div></div></div><p>You need at least two machines (virtual or physical) with 2 NIC. You need also to download
+            Ubuntu 12.04 (LTS).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> Run all commands as the root user</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Controller-Node"/>Controller Node</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Operating-Sytem-Controller"/>Operating System</h3></div></div></div><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install Ubuntu with this parameters :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Time zone : <span class="bold"><strong>UTC</strong></span></p></li><li class="listitem"><p>Hostname : <span class="bold"><strong>folsom-controller</strong></span></p></li><li class="listitem"><p>Packages : <span class="bold"><strong>OpenSSH-Server</strong></span></p></li></ul></div><p> After OS Installation, reboot the server .</p></li><li class="listitem"><p>Add the repository and upgrade Ubuntu
+                        :</p><pre class="screen">apt-get install -y python-software-properties
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-deps-staging
+apt-get update &amp;&amp; apt-get -y dist-upgrade</pre><p>Reboot
+                        the server.</p></li><li class="listitem"><p>Configure the network :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/network/interfaces</strong></span>
+                                    file :</p></li></ul></div><pre class="screen"># Management Network
+auto eth0
+    iface eth0 inet static
+    address 192.168.0.1
+    netmask 255.255.255.0
+    gateway 192.168.0.254
+    dns-nameservers 8.8.8.8
+
+# Bridged Network
+auto eth1
+    iface eth1 inet manual
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on 
+    down ip link set $IFACE promisc off
+    down ifconfig $IFACE down</pre><p>Then,
+                        restart network service :</p><pre class="screen">service networking restart</pre><p>
+                        </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>If <span class="bold"><strong>eth1</strong></span> is connected to a
+                                Switch, it should be in tagged mode.</p></td></tr></table></div><p>
+                        </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Enable <span class="bold"><strong>IP forwarding</strong></span> :</p></li></ul></div><p>
+                        </p><pre class="programlisting">sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\1/' /etc/sysctl.conf
+echo 1 &gt; /proc/sys/net/ipv4/ip_forward </pre><p>
+                        </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit the <span class="bold"><strong>/etc/hosts</strong></span> file and
+                                    add <span class="bold"><strong>folsom-controller</strong></span> &amp;
+                                        <span class="bold"><strong>folsom-compute</strong></span> hostnames
+                                    with correct IP.</p></li></ul></div><p>
+                    </p></li><li class="listitem"><p>Install Configure NTP :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Install the package
+                                    :</p><pre class="screen">apt-get install -y ntp</pre></li><li class="listitem"><p>Configure <span class="bold"><strong>/etc/ntp.conf</strong></span> file
+                                    :</p><pre class="screen">server ntp.ubuntu.com iburst
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10</pre></li><li class="listitem"><p>Restart the service
+                                    :</p><pre class="screen">service ntp restart</pre></li></ul></div></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="MySQL"/>MySQL</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get -y install mysql-server python-mysqldb</pre></li><li class="listitem"><p>Allow connection from the network
+                            :</p><pre class="programlisting">sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</pre></li><li class="listitem"><p>Restart the service
+                            :</p><pre class="programlisting">service mysql restart</pre></li><li class="listitem"><p>Create Databases, Users, Rights
+                            :</p><pre class="programlisting">mysql -u root -ppassword &lt;&lt;EOF
+CREATE DATABASE nova;
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'localhost' \
+    IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'192.168.0.1' \
+    IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON nova.* TO 'nova'@'192.168.0.2' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE cinder;
+GRANT ALL PRIVILEGES ON cinder.* TO 'cinder'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE glance;
+GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE keystone;
+GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' \
+    IDENTIFIED BY 'password';
+CREATE DATABASE quantum;
+GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'localhost' \
+    IDENTIFIED BY 'password';
+GRANT ALL PRIVILEGES ON quantum.* TO 'quantum'@'192.168.0.2' \
+    IDENTIFIED BY 'password';
+FLUSH PRIVILEGES;
+EOF</pre></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="RabbitMQ"/>RabbitMQ</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages :</p><pre class="screen">apt-get -y install rabbitmq-server</pre></li><li class="listitem"><p>Change the default password :</p><pre class="screen">rabbitmqctl change_password guest password</pre></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Keystone"/>Keystone</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get -y install keystone python-keystone python-keystoneclient</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/keystone/keystone.conf</strong></span>
+                            :</p><pre class="programlisting">[DEFAULT]
+admin_token = password
+bind_host = 0.0.0.0
+public_port = 5000
+admin_port = 35357
+compute_port = 8774
+verbose = True
+debug = True
+log_file = keystone.log
+log_dir = /var/log/keystone
+log_config = /etc/keystone/logging.conf
+
+[sql]
+connection = mysql://keystone:password@localhost:3306/keystone
+idle_timeout = 200
+
+[identity]
+driver = keystone.identity.backends.sql.Identity
+
+[catalog]
+driver = keystone.catalog.backends.sql.Catalog
+
+(...)</pre></li><li class="listitem"><p> Restart Keystone and create the tables in the database
+                            :</p><pre class="screen">service keystone restart
+keystone-manage db_sync</pre></li><li class="listitem"><p>Load environment variables :</p><p>
+                            </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Create <span class="bold"><strong>novarc</strong></span> file
+                                        :</p><pre class="screen">export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD=password
+export OS_AUTH_URL="http://localhost:5000/v2.0/"
+export SERVICE_ENDPOINT="http://localhost:35357/v2.0"
+export SERVICE_TOKEN=password</pre></li></ul></div><p>
+                        </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Export the variables
+                                    :</p><pre class="screen">source novarc
+echo "source novarc"&gt;&gt;.bashrc</pre></li></ul></div></li><li class="listitem"><p>Download the <a class="link" href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/keystone-data.sh" target="_top">data script</a> and fill Keystone database with datas
+                            :</p><pre class="screen">./keystone-data.sh</pre></li><li class="listitem"><p>Download the <a class="link" href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/keystone-endpoints.sh" target="_top">endpoint script</a> and create the endpoints
+                            :</p><pre class="screen">./keystone-endpoints.sh</pre></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Glance"/>Glance</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get -y install glance glance-api python-glanceclient glance-common</pre></li><li class="listitem"><p>Configure Glance :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/glance-api.conf</strong></span> and
+                                        <span class="bold"><strong>/etc/glance-registry.conf</strong></span>
+                                    files and modify
+                                    :</p><pre class="screen">sql_connection = mysql://glance:password@localhost/glance
+admin_tenant_name = service
+admin_user = glance
+admin_password = password</pre><p>For
+                                        <span class="bold"><strong>glance-api.conf</strong></span>, modify :
+                                    </p><pre class="screen">notifier_strategy = rabbit
+rabbit_password = password</pre></li><li class="listitem"><p>Restart Glance services
+                                    :</p><pre class="screen">service glance-api restart &amp;&amp; service glance-registry restart</pre></li><li class="listitem"><p>Create Glance tables into the database
+                                    :</p><pre class="screen">glance-manage db_sync</pre></li><li class="listitem"><p>Download and import <a class="link" href="http://uec-images.ubuntu.com/releases/precise/release/ubuntu-12.04-server-cloudimg-amd64.tar.gz" target="_top">Ubuntu 12.04 UEC Image</a>
+                                    :</p><pre class="screen">tar xzvf ubuntu-12.04-server-cloudimg-amd64.tar.gz
+glance add name="Ubuntu" is_public=true container_format=ovf \
+    disk_format=qcow2 &lt; precise-server-cloudimg-amd64.img</pre></li><li class="listitem"><p>Check if the image has been introduced in the index
+                                    :</p><pre class="screen">glance image-list
+
++--------+---------+-------------+------------------+------------+--------+
+| ID     | Name    | Disk Format | Container Format | Size       | Status |
++--------+---------+-------------+------------------+------------+--------+
+| 9a17961| Ubuntu  | qcow2       | ovf              | 1476395008 | active |
++--------+---------+-------------+------------------+------------+--------+</pre></li><li class="listitem"><p>If you want to install Glance Replicator (new in Folsom)
+                                    :</p><pre class="screen">https://review.openstack.org/#/c/7615/</pre><p> More
+                                    informations about it <a class="link" href="http://www.stillhq.com/openstack/000007.html" target="_top">here</a>.</p></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Nova"/>Nova</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get -y install nova-api nova-cert nova-common \
+    nova-scheduler python-nova python-novaclient nova-consoleauth novnc</pre></li><li class="listitem"><p>Configure Nova :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/api-paste.ini</strong></span>
+                                    file and modify
+                                    :</p><pre class="screen">admin_tenant_name = service 
+admin_user = nova 
+admin_password = password</pre><p>You
+                                    should also <span class="bold"><strong>delete</strong></span> each
+                                    composite with "<span class="bold"><strong>volume</strong></span>".</p><p>We can do that manually or with this command
+                                    :</p><pre class="screen">cat /etc/nova/api-paste.ini |grep -v "volume" &gt; paste.ini
+mv paste.ini /etc/nova/api-paste.ini</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/nova.conf</strong></span> file
+                                    and modify
+                                    :</p><pre class="screen">[DEFAULT]
+
+# MySQL Connection #
+sql_connection=mysql://nova:password@192.168.0.1/nova
+
+# nova-scheduler #
+rabbit_password=password
+scheduler_driver=nova.scheduler.simple.SimpleScheduler
+
+# nova-api #
+cc_host=192.168.0.1
+auth_strategy=keystone
+s3_host=192.168.0.1
+ec2_host=192.168.0.1
+nova_url=http://192.168.0.1:8774/v1.1/
+ec2_url=http://192.168.0.1:8773/services/Cloud
+keystone_ec2_url=http://192.168.0.1:5000/v2.0/ec2tokens
+api_paste_config=/etc/nova/api-paste.ini
+allow_admin_api=true
+use_deprecated_auth=false
+ec2_private_dns_show_ip=True
+dmz_cidr=169.254.169.254/32
+ec2_dmz_host=169.254.169.254
+metadata_host=169.254.169.254
+enabled_apis=ec2,osapi_compute,metadata
+
+# Networking #
+network_api_class=nova.network.quantumv2.api.API
+quantum_url=http://192.168.0.1:9696
+libvirt_vif_type=ethernet
+linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+libvirt_use_virtio_for_bridges=True
+
+# Cinder #
+volume_api_class=cinder.volume.api.API
+
+# Glance #
+glance_api_servers=192.168.0.1:9292
+image_service=nova.image.glance.GlanceImageService
+
+# novnc #
+novnc_enable=true
+novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
+vncserver_proxyclient_address=127.0.0.1
+vncserver_listen=0.0.0.0
+
+# Misc #
+logdir=/var/log/nova
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+root_helper=sudo nova-rootwrap /etc/nova/rootwrap.conf
+verbose=true</pre></li><li class="listitem"><p>Create Nova tables into the database
+                                    :</p><pre class="screen">nova-manage db sync</pre></li><li class="listitem"><p>Restart Nova services
+                                    :</p><pre class="screen">service nova-api restart
+service nova-cert restart
+service nova-consoleauth restart
+service nova-scheduler restart
+service novnc restart</pre></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Quantum"/>Quantum</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get install -y quantum-server quantum-plugin-openvswitch \
+    python-pyparsing</pre><p>Download
+                            my script and start Quantum Server
+                            :</p><pre class="screen">./quantum-server.sh</pre></li><li class="listitem"><p>Configure Quantum :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/quantum.conf</strong></span> file and modify
+                                    :</p><pre class="screen">core_plugin = \
+    quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
+auth_strategy = keystone
+fake_rabbit = False
+rabbit_password = password
+root_helper = sudo</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+                                    file and modify
+                                    :</p><pre class="screen">sql_connection = mysql://quantum:password@localhost:3306/quantum
+network_vlan_ranges = default:1000:2999
+tunnel_id_ranges =
+integration_bridge = br-int
+bridge_mappings = default:br-eth1
+root_helper = sudo</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/dhcp_agent.ini</strong></span> file and modify
+                                    :</p><pre class="screen">admin_tenant_name = service
+admin_user = quantum
+admin_password = password
+auth_url = http://192.168.0.1:35357/v2.0
+db_connection = mysql://quantum:password@localhost:3306/quantum
+use_namespaces = True
+debug = True
+verbose = True
+root_helper = sudo</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/api-paste.ini</strong></span> file and modify
+                                    :</p><pre class="screen">admin_tenant_name = service
+admin_user = quantum 
+admin_password = password</pre></li><li class="listitem"><p>Start Quantum Server
+                                    :</p><pre class="screen">./quantum-server.sh</pre></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Open-vSwitch"/>Open-vSwitch</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent </pre></li><li class="listitem"><p>Start Open-vSwitch service &amp; the agent
+                            :</p><pre class="screen">service openvswitch-switch start</pre></li><li class="listitem"><p>Configure Open-vSwitch
+                            :</p><pre class="screen">ovs-vsctl add-br br-int
+ovs-vsctl add-port br-int eth1 </pre></li><li class="listitem"><p>Download my script and start the Agent
+                            :</p><pre class="screen">./quantum-agent.sh </pre></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Cinder"/>Cinder</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
+    open-iscsi iscsitarget-dkms python-cinderclient</pre></li><li class="listitem"><p>Fix some <a class="link" href="https://bugs.launchpad.net/cinder/+bug/1047059" target="_top">issues</a>
+                            :</p><pre class="screen">chown -R cinder:adm /var/log/cinder
+mkdir /usr/lib/python2.7/dist-packages/volumes
+chown -R cinder:cinder /usr/lib/python2.7/dist-packages/volumes</pre></li><li class="listitem"><p>Configure &amp; start the iSCSI services
+                            :</p><pre class="screen">sed -i 's/false/true/g' /etc/default/iscsitarget
+service iscsitarget start
+service open-iscsi start</pre></li><li class="listitem"><p>Configure Cinder :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/cinder/cinder.conf</strong></span>
+                                    file and modify
+                                    :</p><pre class="screen">[DEFAULT]
+rootwrap_config = /etc/cinder/rootwrap.conf
+sql_connection = mysql://cinder:password@localhost:3306/cinder
+volume_group = cinder-volumes
+rabbit_password="password"
+logdir=/var/log/cinder
+verbose=true</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/cinder/api-paste.ini</strong></span> file and modify
+                                    :</p><pre class="screen">admin_tenant_name = service
+admin_user = cinder 
+admin_password = password</pre></li><li class="listitem"><p>Create the volume
+                                    :</p><pre class="screen">fdisk /dev/sdb
+
+[Create a Linux partition]
+
+pvcreate /dev/sdb1
+vgcreate cinder-volumes /dev/sdb1</pre></li><li class="listitem"><p>Create Cinder tables into the database
+                                    :</p><pre class="screen">cinder-manage db sync</pre></li><li class="listitem"><p>Restart the services :
+                                    :</p><pre class="screen">service cinder-api restart
+service cinder-scheduler     restart
+service cinder-volume restart</pre></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Horizon"/>Horizon</h3></div></div></div><p>Install the packages
+                :</p><pre class="screen">    apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
+    memcached python-memcache</pre><p>You
+                can now login with admin / password credentials.</p><p>If you can't see the Quota view, keep in mind that's a <a class="link" href="https://bugs.launchpad.net/horizon/+bug/1040956" target="_top">bug</a> with
+                Quantum &amp; Nova API.</p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Compute-Node"/>Compute Node</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Operating-Sytem-Compute-1"/>Operating System</h3></div></div></div><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install Ubuntu with this parameters :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Time zone : <span class="bold"><strong>UTC</strong></span></p></li><li class="listitem"><p>Hostname : <span class="bold"><strong>folsom-compute</strong></span></p></li><li class="listitem"><p>Packages : <span class="bold"><strong>OpenSSH-Server</strong></span></p></li></ul></div><p> After OS Installation, reboot the server .</p></li><li class="listitem"><p>Add the repository and upgrade Ubuntu
+                        :</p><pre class="screen">apt-get install -y python-software-properties
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
+add-apt-repository ppa:openstack-ubuntu-testing/folsom-deps-staging
+apt-get update &amp;&amp; apt-get -y dist-upgrade</pre><p>Reboot
+                        the server.</p></li><li class="listitem"><p>Configure the network :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/network/interfaces</strong></span>
+                                    file :</p></li></ul></div><pre class="screen"># Management Network
+auto eth0
+    iface eth0 inet static
+    address 192.168.0.2
+    netmask 255.255.255.0
+    gateway 192.168.0.254
+    dns-nameservers 8.8.8.8
+
+# Bridged Network
+auto eth1
+    iface eth1 inet manual
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on 
+    down ip link set $IFACE promisc off
+    down ifconfig $IFACE down</pre><p>Then,
+                        restart network service :</p><pre class="screen">service networking restart</pre><p>
+                        </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>If <span class="bold"><strong>eth1</strong></span> is connected to a
+                                Switch, it should be in tagged mode.</p></td></tr></table></div><p>
+                        </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Enable <span class="bold"><strong>IP forwarding</strong></span> :</p></li></ul></div><p>
+                        </p><pre class="programlisting">sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\1/' /etc/sysctl.conf
+echo 1 &gt; /proc/sys/net/ipv4/ip_forward </pre><p>
+                        </p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit the <span class="bold"><strong>/etc/hosts</strong></span> file and
+                                    add <span class="bold"><strong>folsom-controller</strong></span> &amp;
+                                    <span class="bold"><strong>folsom-compute</strong></span> hostnames
+                                    with correct IP.</p></li></ul></div><p>
+                    </p></li><li class="listitem"><p>Install &amp; Configure NTP :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Install the package
+                                :</p><pre class="screen">apt-get install -y ntp</pre></li><li class="listitem"><p>Configure <span class="bold"><strong>/etc/ntp.conf</strong></span> file
+                                    :</p><pre class="screen">server 192.168.0.1</pre></li><li class="listitem"><p>Restart the service
+                                :</p><pre class="screen">service ntp restart</pre></li></ul></div></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Hypervisor"/>Hypervisor</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get install -y kvm libvirt-bin</pre></li><li class="listitem"><p>Configure libvirt :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/libvirt/qemu.conf</strong></span>
+                                    file and add
+                                    :</p><pre class="screen">cgroup_device_acl = [
+    "/dev/null", "/dev/full", "/dev/zero",
+    "/dev/random", "/dev/urandom",
+    "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
+    "/dev/rtc", "/dev/hpet","/dev/net/tun",
+]</pre></li><li class="listitem"><p>Allow <span class="bold"><strong>Live Migrations</strong></span>
+                                    :</p><p>Edit  <span class="bold"><strong>/etc/libvirt/libvirtd.conf</strong></span> file
+                                    :</p><pre class="programlisting">listen_tls = 0
+listen_tcp = 1
+auth_tcp = "none" </pre><p>Modify libvirtd_opts variable in <span class="bold"><strong>/etc/init/libvirt-bin.conf</strong></span> file
+                                    :</p><pre class="screen">env libvirtd_opts="-d -l" </pre><p>Edit  <span class="bold"><strong>/etc/default/libvirt-bin</strong></span> file
+                                    :</p><pre class="screen">libvirtd_opts="-d -l"   </pre></li></ul></div></li><li class="listitem"><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Restart libvirt
+                                    :</p><pre class="screen">service libvirt-bin restart</pre></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Nova-Compute-and-API"/>Nova</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get -y install nova-api nova-compute-kvm novnc</pre></li><li class="listitem"><p>Configure Nova :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/api-paste.ini</strong></span>
+                                    file and modify
+                                    :</p><pre class="screen">admin_tenant_name = service 
+admin_user = nova 
+admin_password = password</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/nova.conf</strong></span> file
+                                    and modify
+                                    :</p><pre class="screen">[DEFAULT]
+
+# MySQL Connection #
+sql_connection=mysql://nova:password@192.168.0.1/nova
+
+# nova-scheduler #
+rabbit_host=192.168.0.1
+rabbit_password=password
+scheduler_driver=nova.scheduler.simple.SimpleScheduler
+
+# nova-api #
+cc_host=192.168.0.1
+auth_strategy=keystone
+s3_host=192.168.0.1
+ec2_host=192.168.0.1
+nova_url=http://192.168.0.1:8774/v1.1/
+ec2_url=http://192.168.0.1:8773/services/Cloud
+keystone_ec2_url=http://192.168.0.1:5000/v2.0/ec2tokens
+api_paste_config=/etc/nova/api-paste.ini
+allow_admin_api=true
+use_deprecated_auth=false
+ec2_private_dns_show_ip=True
+dmz_cidr=169.254.169.254/32
+ec2_dmz_host=169.254.169.254
+metadata_host=169.254.169.254
+enabled_apis=ec2,osapi_compute,metadata
+
+# Networking #
+network_api_class=nova.network.quantumv2.api.API
+quantum_url=http://192.168.0.1:9696
+libvirt_vif_type=ethernet
+linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
+firewall_driver=nova.virt.firewall.NoopFirewallDriver
+libvirt_use_virtio_for_bridges=True
+
+# Cinder #
+volume_api_class=cinder.volume.api.API
+
+# Glance #
+glance_api_servers=192.168.0.1:9292
+image_service=nova.image.glance.GlanceImageService
+
+# novnc #
+novnc_enable=true
+novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
+vncserver_proxyclient_address=127.0.0.1
+vncserver_listen=0.0.0.0
+
+# Misc #
+logdir=/var/log/nova
+state_path=/var/lib/nova
+lock_path=/var/lock/nova
+root_helper=sudo nova-rootwrap /etc/nova/rootwrap.conf
+verbose=true</pre></li><li class="listitem"><p>Restart Nova services
+                                    :</p><pre class="screen">service nova-api restart
+service nova-compute restart</pre></li></ul></div></li></ol></div><p>
+            </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="OpenvSwitch"/>Open-vSwitch</h3></div></div></div><p>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
+                            :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent </pre></li><li class="listitem"><p>Start Open-vSwitch service &amp; the agent
+                            :</p><pre class="screen">service openvswitch-switch start</pre></li><li class="listitem"><p>Configure Open-vSwitch
+                            :</p><pre class="screen">ovs-vsctl add-br br-int
+ovs-vsctl add-port br-int eth1 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+                            file and modify
+                            :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.2:3306/quantum
+network_vlan_ranges = default:1000:2999
+tunnel_id_ranges =
+integration_bridge = br-int
+bridge_mappings = default:br-eth1
+root_helper = sudo</pre></li><li class="listitem"><p>Download my script and start the Agent
+                            :</p><pre class="screen">./quantum-agent.sh </pre></li></ol></div><p>
+            </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Credits"/>Credits</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Thanks"/>Thank's to ...</h3></div></div></div><p>John Griffith - SolidFire</p><p>Martin Loschwitz - Hastexo</p><p>Adam Gandelman  - Canonical</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="License"/>License</h3></div></div></div><pre class="programlisting">   Copyright 2012 Emilien Macchi
+
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
+
+       http://www.apache.org/licenses/LICENSE-2.0
+
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.</pre></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Author"/>About the author</h3></div></div></div><p>Emilien Macchi, Junior System Engineer at <a class="link" href="http://www.stackops.com/" target="_top">StackOps Technologies</a>.dns</p></div></div></div></body></html>
