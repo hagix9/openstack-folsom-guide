@@ -51,8 +51,10 @@
         <db:note xmlns:db="http://docbook.org/ns/docbook">
             <db:para> That's a basic architecture, of course <emphasis role="bold">you can add many
                     compute nodes as you want</emphasis>.</db:para>
-        </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use
-            "Folsom Testing Packages" which are built from master for each component.</para></section>
+        </db:note><para>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use "<link
+                xlink:href="https://launchpad.net/~openstack-ubuntu-testing/+archive/folsom-trunk-testing"
+                >Folsom Testing Packages</link>" which are built from master for each
+            component.</para></section>
     <section xml:id="Requirements"><info><title>Requirements</title></info>
     
     <para>You need at least two machines (virtual or physical) with 2 NIC. You need also to download
@@ -164,7 +166,7 @@ fudge 127.127.1.0 stratum 10</screen></para>
                     </listitem>
                     <listitem>
                         <para>Allow connection from the network
-                            :<programlisting>sudo sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</programlisting></para>
+                            :<programlisting>sed -i 's/127.0.0.1/0.0.0.0/g' /etc/mysql/my.cnf</programlisting></para>
                     </listitem>
                     <listitem>
                         <para>Restart the service
@@ -262,11 +264,11 @@ keystone-manage db_sync</screen></para>
                             <itemizedlist>
                                 <listitem>
                                     <para>Create <emphasis role="bold">novarc</emphasis> file
-                                        :<screen>export OS_TENANT_NAME=admin 
-export OS_USERNAME=admin 
-export OS_PASSWORD=password 
+                                        :<screen>export OS_TENANT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD=password
 export OS_AUTH_URL="http://localhost:5000/v2.0/"
-export SERVICE_ENDPOINT="http://localhost:35357/v2.0";
+export SERVICE_ENDPOINT="http://localhost:35357/v2.0"
 export SERVICE_TOKEN=password</screen></para>
                                 </listitem>
                             </itemizedlist>
@@ -280,11 +282,16 @@ echo "source novarc">>.bashrc</screen></para>
                         </itemizedlist>
                     </listitem>
                     <listitem>
-                        <para>Fill Keystone database with datas
+                        <para>Download the <link
+                                xlink:href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/keystone-data.sh"
+                                >data script</link> and fill Keystone database with datas
                             :<screen>./keystone-data.sh</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Create Endpoints :<screen>./keystone-endpoints.sh</screen></para>
+                        <para>Download the <link
+                                xlink:href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/keystone-endpoints.sh"
+                                >endpoint script</link> and create the endpoints
+                            :<screen>./keystone-endpoints.sh</screen></para>
                     </listitem>
                 </orderedlist>
             </para>
@@ -311,7 +318,8 @@ admin_tenant_name = service
 admin_user = glance
 admin_password = password</screen>For
                                         <emphasis role="bold">glance-api.conf</emphasis>, modify :
-                                    <screen>rabbit_password = password</screen></para>
+                                    <screen>notifier_strategy = rabbit
+rabbit_password = password</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Restart Glance services
@@ -323,8 +331,7 @@ admin_password = password</screen>For
                             </listitem>
                             <listitem>
                                 <para>Download and import <link
-                                    xlink:href="http://uec-images.ubuntu.com/releases/precise/release/ubuntu-12.04-server-
-                                    cloudimg-amd64.tar.gz">Ubuntu 12.04 UEC Image</link>
+                                    xlink:href="http://uec-images.ubuntu.com/releases/precise/release/ubuntu-12.04-server-cloudimg-amd64.tar.gz">Ubuntu 12.04 UEC Image</link>
                                     :<screen>tar xzvf ubuntu-12.04-server-cloudimg-amd64.tar.gz
 glance add name="Ubuntu" is_public=true container_format=ovf \
     disk_format=qcow2 &lt; precise-server-cloudimg-amd64.img</screen></para>
@@ -408,11 +415,6 @@ enabled_apis=ec2,osapi_compute,metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
-quantum_auth_strategy=keystone
-quantum_admin_tenant_name=service
-quantum_admin_username=quantum
-quantum_admin_password=password
 quantum_url=http://192.168.0.1:9696
 libvirt_vif_type=ethernet
 linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
@@ -420,7 +422,7 @@ firewall_driver=nova.virt.firewall.NoopFirewallDriver
 libvirt_use_virtio_for_bridges=True
 
 # Cinder #
-volume_api_class=nova.volume.cinder.API
+volume_api_class=cinder.volume.api.API
 
 # Glance #
 glance_api_servers=192.168.0.1:9292
@@ -447,7 +449,7 @@ verbose=true</screen></para>
                                 <para>Restart Nova services
                                     :<screen>service nova-api restart
 service nova-cert restart
-service consoleauth restart
+service nova-consoleauth restart
 service nova-scheduler restart
 service novnc restart</screen></para>
                             </listitem>
@@ -464,11 +466,8 @@ service novnc restart</screen></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch</screen>
-                            If you have an error like
-                            :<screen>E: Sub-process /usr/bin/dpkg returned an error code (1)</screen></para>
-                        <para>You should force the configuration
-                            :<programlisting>dpkg --force-all --configure -a</programlisting></para>
+                            :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch python-pyparsing</screen>Start
+                            Quantum Server :<screen>quantum-server&amp;</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Quantum :</para>
@@ -479,6 +478,7 @@ service novnc restart</screen></para>
                                     :<screen>core_plugin = \
     quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
 auth_strategy = keystone
+fake_rabbit = False
 rabbit_password = password</screen></para>
                             </listitem>
                             <listitem>
@@ -490,6 +490,20 @@ network_vlan_ranges = default:1000:2999
 tunnel_id_ranges =
 integration_bridge = br-int
 bridge_mappings = default:br-eth1</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/dhcp_agent.ini</emphasis> file and modify
+                                    :<screen>sql_connection = mysql://quantum:password@localhost:3306/quantum
+admin_tenant_name = service
+admin_user = quantum
+admin_password = password
+auth_url = http://192.168.0.1:35357/v2.0
+db_connection = mysql://quantum:password@localhost:3306/quantum
+use_namespaces = True
+debug = True
+verbose = True
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -513,18 +527,9 @@ admin_password = password</screen></para>
                             :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
                     </listitem>
                     <listitem>
-                        <para>Configure Open-vSwitch :</para>
-                        <itemizedlist>
-                            <listitem>
-                                <para>Create the Integration Dridge
-                                    :<programlisting>ovs-vsctl add-br br-int</programlisting></para>
-                            </listitem>
-                            <listitem>
-                                <para>Create the physical Network Bridge
-                                    :<screen>ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 eth1</screen></para>
-                            </listitem>
-                        </itemizedlist>
+                        <para>Start Open-vSwitch service &amp; the agent
+                            :<screen>service openvswitch-switch start
+quantum-openvswitch-agent &amp;</screen></para>
                     </listitem>
                 </orderedlist>
             </para>
@@ -537,7 +542,22 @@ ovs-vsctl add-port br-eth1 eth1</screen></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume </screen></para>
+                            :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
+    open-iscsi iscsitarget-dkms python-cinderclient</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Fix some <link
+                                xlink:href="https://bugs.launchpad.net/cinder/+bug/1047059"
+                                >issues</link>
+                            :<screen>chown -R cinder:adm /var/log/cinder
+mkdir /usr/lib/python2.7/dist-packages/volumes
+chown -R cinder:cinder /usr/lib/python2.7/dist-packages/volumes</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure &amp; start the iSCSI services
+                            :<screen>sed -i 's/false/true/g' /etc/default/iscsitarget
+service iscsitarget start
+service open-iscsi start</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Cinder :</para>
@@ -548,9 +568,10 @@ ovs-vsctl add-port br-eth1 eth1</screen></para>
                                     :<screen>[DEFAULT]
 rootwrap_config = /etc/cinder/rootwrap.conf
 sql_connection = mysql://cinder:password@localhost:3306/cinder
-volume_group = cinder
-rabbit_host="localhost"
-rabbit_password="password"</screen></para>
+volume_group = cinder-volumes
+rabbit_password="password"
+logdir=/var/log/cinder
+verbose=true</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -575,7 +596,7 @@ vgcreate cinder-volumes /dev/sdb1</screen></para>
                             <listitem>
                                 <para>Restart the services :
                                     :<screen>service cinder-api restart
-service cinder-schedule restart
+service cinder-scheduler     restart
 service cinder-volume restart</screen></para>
                             </listitem>
                         </itemizedlist>
@@ -586,12 +607,8 @@ service cinder-volume restart</screen></para>
             <info>
                 <title>Horizon</title>
             </info>
-                        <para>Since all dependences have not been yet introduced into Ubuntu 12.04,
-                we need to download <emphasis role="bold">python-openstack-auth</emphasis> from
-                Quantal.</para>
                         <para>Install the packages
                 :<screen>apt-get -y install python-django
-wget http://mirror.ovh.net/ubuntu//pool/main/p/python-django-openstack-auth/python-openstack-auth_1.0.1-0ubuntu6_all.deb
 dpkg -i python-openstack-auth*.deb
 apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
     memcached python-memcache</screen>
