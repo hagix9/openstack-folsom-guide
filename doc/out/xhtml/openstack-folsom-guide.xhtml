@@ -369,7 +369,7 @@ ec2_private_dns_show_ip=True
 dmz_cidr=169.254.169.254/32
 ec2_dmz_host=169.254.169.254
 metadata_host=169.254.169.254
-enabled_apis=ec2,osapi_compute,metadata
+enabled_apis=metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
@@ -407,7 +407,7 @@ service nova-compute restart</pre></li></ul></div></li></ol></div><p>
                             :</p><pre class="screen">ovs-vsctl add-br br-int
 ovs-vsctl add-port br-int eth1 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                             file and modify
-                            :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.2:3306/quantum
+                            :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 network_vlan_ranges = default:1000:2999
 tunnel_id_ranges =
 integration_bridge = br-int
