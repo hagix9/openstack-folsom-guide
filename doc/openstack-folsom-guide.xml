@@ -560,7 +560,7 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                     <listitem>
                         <para>Install the packages
                             :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
-    open-iscsi iscsitarget-dkms python-cinderclient</screen></para>
+    open-iscsi iscsitarget-dkms python-cinderclient tgt</screen></para>
                     </listitem>
                     <listitem>
                         <para>Fix some <link
@@ -842,7 +842,7 @@ image_service=nova.image.glance.GlanceImageService
 
 # novnc #
 novnc_enable=true
-novncproxy_base_url=http://192.168.0.1:6080/vnc_auto.html
+novncproxy_base_url=http://192.168.0.2:6080/vnc_auto.html
 vncserver_proxyclient_address=127.0.0.1
 vncserver_listen=0.0.0.0
 
@@ -935,7 +935,7 @@ root_helper = sudo</screen></para>
                 <title>About the author</title>
             </info>
             <para>Emilien Macchi, Junior System Engineer at <link
-                    xlink:href="http://www.stackops.com/">StackOps Technologies</link></para>
+                    xlink:href="http://www.stackops.com/">StackOps Technologies</link>.</para>
         </section>
     </section>
 </article>
