@@ -4,3 +4,11 @@ openstack-folsom-guide
 OpenStack Folsom Guide for Ubuntu 12.04
 
 [STILL UNDER CONSTRUCTION]
+
+OS, RabbitMQ, MySQL : OK
+Keystone : OK
+Glance : OK
+Nova : OK
+Cinder : OK
+Horizon : OK
+Quantum with OVS Plugin & Agent : In progress
