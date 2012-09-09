@@ -460,71 +460,6 @@ service novnc restart</screen></para>
                 </orderedlist>
             </para>
         </section>
-        <section xml:id="Quantum">
-            <info>
-                <title>Quantum</title>
-            </info>
-            <para>
-                <orderedlist>
-                    <listitem>
-                        <para>Install the packages
-                            :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch \
-    python-pyparsing</screen>Download
-                            my script and start Quantum Server
-                            :<screen>./quantum-server.sh</screen></para>
-                    </listitem>
-                    <listitem>
-                        <para>Configure Quantum :</para>
-                        <itemizedlist>
-                            <listitem>
-                                <para>Edit <emphasis role="bold"
-                                        >/etc/quantum/quantum.conf</emphasis> file and modify
-                                    :<screen>core_plugin = \
-    quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
-auth_strategy = keystone
-fake_rabbit = False
-rabbit_password = password
-root_helper = sudo</screen></para>
-                            </listitem>
-                            <listitem>
-                                <para>Edit <emphasis role="bold"
-                                        >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
-                                    file and modify
-                                    :<screen>sql_connection = mysql://quantum:password@localhost:3306/quantum
-network_vlan_ranges = default:1000:2999
-tunnel_id_ranges =
-integration_bridge = br-int
-bridge_mappings = default:br-eth1
-root_helper = sudo</screen></para>
-                            </listitem>
-                            <listitem>
-                                <para>Edit <emphasis role="bold"
-                                        >/etc/quantum/dhcp_agent.ini</emphasis> file and modify
-                                    :<screen>admin_tenant_name = service
-admin_user = quantum
-admin_password = password
-auth_url = http://192.168.0.1:35357/v2.0
-db_connection = mysql://quantum:password@localhost:3306/quantum
-use_namespaces = True
-debug = True
-verbose = True
-root_helper = sudo</screen></para>
-                            </listitem>
-                            <listitem>
-                                <para>Edit <emphasis role="bold"
-                                        >/etc/quantum/api-paste.ini</emphasis> file and modify
-                                    :<screen>admin_tenant_name = service
-admin_user = quantum 
-admin_password = password</screen></para>
-                            </listitem>
-                            <listitem>
-                                <para>Start Quantum Server
-                                    :<screen>./quantum-server.sh</screen></para>
-                            </listitem>
-                        </itemizedlist>
-                    </listitem>
-                </orderedlist>
-            </para>        </section>
         <section xml:id="Open-vSwitch">
             <info>
                 <title>Open-vSwitch</title>
@@ -533,7 +468,7 @@ admin_password = password</screen></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
+                            :<screen>apt-get install -y openvswitch-switch</screen></para>
                     </listitem>
                     <listitem>
                         <para>Start Open-vSwitch service &amp; the agent
@@ -544,13 +479,132 @@ admin_password = password</screen></para>
                             :<screen>ovs-vsctl add-br br-int
 ovs-vsctl add-port br-int eth1 </screen></para>
                     </listitem>
-                    <listitem>
-                        <para>Download my script and start the Agent
-                            :<screen>./quantum-agent.sh </screen></para>
-                    </listitem>
                 </orderedlist>
             </para>
         </section>
+        <section xml:id="Quantum">
+            <info>
+                <title>Quantum</title>
+            </info>
+            <para>
+                <orderedlist>
+                    <listitem>
+                        <para>Install the packages :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch \
+    python-pyparsing quantum-plugin-openvswitch-agent \
+    quantum-plugin-dhcp-agent quantum-dhcp-agent \
+    quantum-plugin-l3 quantum-plugin-l3-agent</screen>
+                            <db:note xmlns:db="http://docbook.org/ns/docbook">
+                                <db:para> You may have some <emphasis role="bold">packaging
+                                        issues</emphasis>. You can force the installation by running
+                                    :</db:para>
+                                <screen>dpkg -i --force-overwrite /var/cache/apt/archives/&lt;package-name></screen>
+                            </db:note></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Quantum init scripts :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/init/quantum-server.conf
+                                    </emphasis>file and modify :
+                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
+    /usr/bin/quantum-server -- --config-file \
+    /etc/quantum/quantum.conf --log-file \
+    /var/log/quantum/server.log \
+    --config-file /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/init/quantum-plugin-openvswitch-agent.conf
+                                    </emphasis>file and modify :
+                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
+    /usr/bin/quantum-openvswitch-agent -- \
+    --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
+    --log-file=/var/log/quantum/agent-ovs.log \
+    --config-file /etc/quantum/quantum.conf</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/init/quantum-l3-agent.conf
+                                    </emphasis>file and modify :
+                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
+    /usr/bin/quantum-l3-agent \
+    -config-file=/etc/quantum/plugins/l3/l3_agent.ini \
+    --log-file /var/log/quantum/agent-l3.log</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold">/etc/init/quantum-dhcp-agent.conf
+                                    </emphasis>file and modify :
+                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
+    /usr/bin/quantum-dhcp-agent \
+    -- --config-file=/etc/quantum/dhcp_agent.ini \
+    --log-file=/var/log/quantum/agent-dhcp.log</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <para>Configure Quantum services :</para>
+                        <itemizedlist>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/quantum.conf</emphasis> file and modify
+                                    :<screen>core_plugin = \
+    quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
+auth_strategy = keystone
+fake_rabbit = False
+rabbit_password = password
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
+                                    file and modify
+                                    :<screen>sql_connection = mysql://quantum:password@localhost:3306/quantum
+network_vlan_ranges = default:1000:2999
+integration_bridge = br-int
+bridge_mappings = default:br-eth1
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/plugins/l3/l3_agent.ini</emphasis> file and
+                                    modify
+                                    :<screen>[DEFAULT]
+debug = True
+interface_driver = quantum.agent.linux.interface.OVSInterfaceDriver
+auth_url = http://localhost:35357/v2.0
+auth_region = RegionOne
+admin_tenant_name = service
+admin_user = quantum
+admin_password = password
+root_helper = /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/dhcp_agent.ini</emphasis> file and modify
+                                    :<screen>auth_url = http://192.168.0.1:35357/v2.0
+db_connection = mysql://quantum:password@localhost:3306/quantum
+use_namespaces = True
+debug = True
+verbose = True
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/api-paste.ini</emphasis> file and modify
+                                    :<screen>admin_tenant_name = service
+admin_user = quantum 
+admin_password = password</screen></para>
+                            </listitem>
+                        </itemizedlist>
+                    </listitem>
+                    <listitem>
+                        <para>Start the services
+                            :<screen>service quantum-server restart
+service quantum-plugin-openvswitch-agent restart
+service quantum-dhcp-agent restart
+service quantum-l3-agent restart</screen></para>
+                    </listitem>
+                </orderedlist>
+            </para>        </section>
         <section xml:id="Cinder">
             <info>
                 <title>Cinder</title>
@@ -672,7 +726,7 @@ apt-get update &amp;&amp; apt-get -y dist-upgrade</screen>Reboot
 auto eth0
     iface eth0 inet static
     address 192.168.0.2
-    netmask 255.255.255.0
+    netmask 255.255.255.0root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
@@ -750,9 +804,9 @@ echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
                             <listitem>
                                 <para>Allow <emphasis role="bold">Live Migrations</emphasis>
                                     :</para>
-                                <para>Edit  <emphasis role="bold"
+                                <para>Edit <emphasis role="bold"
                                         >/etc/libvirt/libvirtd.conf</emphasis> file
-                                    :<programlisting>listen_tls = 0
+                                    :<programlisting>listen_tls = 0root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
 listen_tcp = 1
 auth_tcp = "none" </programlisting></para>
                                 <para>Modify libvirtd_opts variable in <emphasis role="bold"
@@ -874,8 +928,12 @@ service nova-compute restart</screen></para>
                             :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
                     </listitem>
                     <listitem>
-                        <para>Start Open-vSwitch service &amp; the agent
-                            :<screen>service openvswitch-switch start</screen></para>
+                        <para>Edit <emphasis role="bold"
+                                >/etc/init/quantum-plugin-openvswitch-agent.conf </emphasis>file and
+                            modify
+                            :<screen>exec start-stop-daemon --start --chuid quantum --exec /usr/bin/quantum-openvswitch-agent \
+    -- --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
+    --log-file=/var/log/quantum/agent-ovs.log --config-file /etc/quantum/quantum.conf</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Open-vSwitch
@@ -888,14 +946,13 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                             file and modify
                             :<screen>sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 network_vlan_ranges = default:1000:2999
-tunnel_id_ranges =
 integration_bridge = br-int
 bridge_mappings = default:br-eth1
-root_helper = sudo</screen></para>
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Download my script and start the Agent
-                            :<screen>./quantum-agent.sh </screen></para>
+                        <para>Start the Agent
+                            :<screen>service quantum-plugin-openvswitch-agent restart</screen></para>
                     </listitem>
                 </orderedlist>
             </para>        </section>
@@ -911,6 +968,7 @@ root_helper = sudo</screen></para>
             <para>John Griffith - SolidFire</para>
             <para>Martin Loschwitz - Hastexo</para>
             <para>Adam Gandelman  - Canonical</para>
+            <para>Dan Wendlandt - Nicira / VMware</para>
         </section>
         <section xml:id="License">
             <info>
