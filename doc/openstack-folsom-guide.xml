@@ -492,7 +492,7 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                         <para>Install the packages :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch \
     python-pyparsing quantum-plugin-openvswitch-agent \
     quantum-plugin-dhcp-agent quantum-dhcp-agent \
-    quantum-plugin-l3 quantum-plugin-l3-agent</screen>
+    quantum-plugin-l3 quantum-plugin-l3-agent python-cliff</screen>
                             <db:note xmlns:db="http://docbook.org/ns/docbook">
                                 <db:para> You may have some <emphasis role="bold">packaging
                                         issues</emphasis>. You can force the installation by running
@@ -516,7 +516,7 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/init/quantum-plugin-openvswitch-agent.conf
                                     </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid root --exec \
+                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
     /usr/bin/quantum-openvswitch-agent -- \
     --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
     --log-file=/var/log/quantum/agent-ovs.log \
@@ -561,7 +561,7 @@ rabbit_password = password</screen></para>
 network_vlan_ranges = default:1000:2999
 integration_bridge = br-int
 bridge_mappings = default:br-eth1
-root_helper = sudo</screen></para>
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -575,7 +575,7 @@ auth_region = RegionOne
 admin_tenant_name = service
 admin_user = quantum
 admin_password = password
-root_helper = /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
