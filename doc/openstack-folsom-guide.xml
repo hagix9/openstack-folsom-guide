@@ -516,7 +516,7 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/init/quantum-plugin-openvswitch-agent.conf
                                     </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
+                                    <screen>exec start-stop-daemon --start --chuid root --exec \
     /usr/bin/quantum-openvswitch-agent -- \
     --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
     --log-file=/var/log/quantum/agent-ovs.log \
@@ -526,7 +526,8 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                                 <para>Edit <emphasis role="bold">/etc/init/quantum-l3-agent.conf
                                     </emphasis>file and modify :
                                     <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-l3-agent \
+    /usr/bin/quantum-l3-agent -- \
+    --config-file=/etc/quantum/quantum.conf \
     -config-file=/etc/quantum/plugins/l3/l3_agent.ini \
     --log-file /var/log/quantum/agent-l3.log</screen></para>
                             </listitem>
@@ -534,8 +535,8 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                                 <para>Edit <emphasis role="bold">/etc/init/quantum-dhcp-agent.conf
                                     </emphasis>file and modify :
                                     <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-dhcp-agent \
-    -- --config-file=/etc/quantum/dhcp_agent.ini \
+    /usr/bin/quantum-dhcp-agent -- \
+    --config-file=/etc/quantum/dhcp_agent.ini \
     --log-file=/var/log/quantum/agent-dhcp.log</screen></para>
                             </listitem>
                         </itemizedlist>
@@ -550,8 +551,7 @@ ovs-vsctl add-port br-int eth1 </screen></para>
     quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
 auth_strategy = keystone
 fake_rabbit = False
-rabbit_password = password
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+rabbit_password = password</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -561,7 +561,7 @@ root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
 network_vlan_ranges = default:1000:2999
 integration_bridge = br-int
 bridge_mappings = default:br-eth1
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+root_helper = sudo</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -614,10 +614,10 @@ service quantum-l3-agent restart</screen></para>
                     <listitem>
                         <para>Install the packages
                             :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
-    open-iscsi iscsitarget-dkms python-cinderclient tgt</screen></para>
+    open-iscsi iscsitarget-dkms python-cinderclient</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Fix some <link
+                        <para>Fix some packaging <link
                                 xlink:href="https://bugs.launchpad.net/cinder/+bug/1047059"
                                 >issues</link>
                             :<screen>chown -R cinder:adm /var/log/cinder
@@ -639,6 +639,7 @@ service open-iscsi start</screen></para>
                                     :<screen>[DEFAULT]
 rootwrap_config = /etc/cinder/rootwrap.conf
 sql_connection = mysql://cinder:password@localhost:3306/cinder
+iscsi_helper = ietadm 
 volume_group = cinder-volumes
 rabbit_password="password"
 logdir=/var/log/cinder

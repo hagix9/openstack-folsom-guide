@@ -232,33 +232,33 @@ ovs-vsctl add-port br-int eth1 </pre></li></ol></div><p>
     /var/log/quantum/server.log \
     --config-file /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-plugin-openvswitch-agent.conf
                                     </strong></span>file and modify :
-                                    </p><pre class="screen">exec start-stop-daemon --start --chuid quantum --exec \
+                                    </p><pre class="screen">exec start-stop-daemon --start --chuid root --exec \
     /usr/bin/quantum-openvswitch-agent -- \
     --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
     --log-file=/var/log/quantum/agent-ovs.log \
     --config-file /etc/quantum/quantum.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-l3-agent.conf
                                     </strong></span>file and modify :
                                     </p><pre class="screen">exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-l3-agent \
+    /usr/bin/quantum-l3-agent -- \
+    --config-file=/etc/quantum/quantum.conf \
     -config-file=/etc/quantum/plugins/l3/l3_agent.ini \
     --log-file /var/log/quantum/agent-l3.log</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-dhcp-agent.conf
                                     </strong></span>file and modify :
                                     </p><pre class="screen">exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-dhcp-agent \
-    -- --config-file=/etc/quantum/dhcp_agent.ini \
+    /usr/bin/quantum-dhcp-agent -- \
+    --config-file=/etc/quantum/dhcp_agent.ini \
     --log-file=/var/log/quantum/agent-dhcp.log</pre></li></ul></div></li><li class="listitem"><p>Configure Quantum services :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/quantum.conf</strong></span> file and modify
                                     :</p><pre class="screen">core_plugin = \
     quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
 auth_strategy = keystone
 fake_rabbit = False
-rabbit_password = password
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+rabbit_password = password</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                                     file and modify
                                     :</p><pre class="screen">sql_connection = mysql://quantum:password@localhost:3306/quantum
 network_vlan_ranges = default:1000:2999
 integration_bridge = br-int
 bridge_mappings = default:br-eth1
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/l3/l3_agent.ini</strong></span> file and
+root_helper = sudo</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/l3/l3_agent.ini</strong></span> file and
                                     modify
                                     :</p><pre class="screen">[DEFAULT]
 debug = True
@@ -285,7 +285,7 @@ service quantum-l3-agent restart</pre></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Cinder"/>Cinder</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
                             :</p><pre class="screen">apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
-    open-iscsi iscsitarget-dkms python-cinderclient tgt</pre></li><li class="listitem"><p>Fix some <a class="link" href="https://bugs.launchpad.net/cinder/+bug/1047059" target="_top">issues</a>
+    open-iscsi iscsitarget-dkms python-cinderclient</pre></li><li class="listitem"><p>Fix some packaging <a class="link" href="https://bugs.launchpad.net/cinder/+bug/1047059" target="_top">issues</a>
                             :</p><pre class="screen">chown -R cinder:adm /var/log/cinder
 mkdir /usr/lib/python2.7/dist-packages/volumes
 chown -R cinder:cinder /usr/lib/python2.7/dist-packages/volumes</pre></li><li class="listitem"><p>Configure &amp; start the iSCSI services
@@ -296,6 +296,7 @@ service open-iscsi start</pre></li><li class="listitem"><p>Configure Cinder :</p
                                     :</p><pre class="screen">[DEFAULT]
 rootwrap_config = /etc/cinder/rootwrap.conf
 sql_connection = mysql://cinder:password@localhost:3306/cinder
+iscsi_helper = ietadm 
 volume_group = cinder-volumes
 rabbit_password="password"
 logdir=/var/log/cinder
