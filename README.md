@@ -11,4 +11,4 @@ Glance : OK
 Nova : OK
 Cinder : OK
 Horizon : OK
-Quantum with OVS Plugin & Agent : In progress
+Quantum with OVS Plugin & Agent : OK
