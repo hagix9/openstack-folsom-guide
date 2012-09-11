@@ -417,11 +417,13 @@ enabled_apis=ec2,osapi_compute,metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum_url=http://192.168.0.1:9696
-libvirt_vif_type=ethernet
-linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
+quantum__url=http://192.168.0.1:9696
+quantum_auth_strategy=keystone
+quantum_admin_tenant=service
+quantum_admin_username=quantum
+quantum_admin_password=password
+quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
-libvirt_use_virtio_for_bridges=True
 
 # Cinder #
 volume_api_class=cinder.volume.api.API
@@ -489,11 +491,12 @@ ovs-vsctl add-port br-int eth1 </screen></para>
             <para>
                 <orderedlist>
                     <listitem>
-                        <para>Install the packages :<screen>apt-get install -y quantum-server quantum-plugin-openvswitch \
-    python-pyparsing quantum-plugin-openvswitch-agent \
-    quantum-plugin-dhcp-agent quantum-dhcp-agent \
-    quantum-plugin-l3 quantum-plugin-l3-agent python-cliff</screen>
-                            <db:note xmlns:db="http://docbook.org/ns/docbook">
+                        <para>Install the packages
+                                :<screen>apt-get -y install quantum-server python-cliff \
+    quantum-plugin-openvswitch-agent \
+    quantum-l3-agent quantum-dhcp-agent \
+    python-pyparsing </screen><db:note
+                                xmlns:db="http://docbook.org/ns/docbook">
                                 <db:para> You may have some <emphasis role="bold">packaging
                                         issues</emphasis>. You can force the installation by running
                                     :</db:para>
@@ -501,43 +504,24 @@ ovs-vsctl add-port br-int eth1 </screen></para>
                             </db:note></para>
                     </listitem>
                     <listitem>
-                        <para>Configure Quantum init scripts :</para>
+                        <para>If you want to minitor by the logs all the quantum services, you must
+                            add at the end of exec command :</para>
                         <itemizedlist>
-                            <listitem>
-                                <para>Edit <emphasis role="bold">/etc/init/quantum-server.conf
-                                    </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-server -- --config-file \
-    /etc/quantum/quantum.conf --log-file \
-    /var/log/quantum/server.log \
-    --config-file /etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</screen></para>
-                            </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/init/quantum-plugin-openvswitch-agent.conf
-                                    </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-openvswitch-agent -- \
-    --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
-    --log-file=/var/log/quantum/agent-ovs.log \
-    --config-file /etc/quantum/quantum.conf</screen></para>
+                                    </emphasis>file and add :
+                                    <screen>--log-file=/var/log/quantum/agent-ovs.log</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold">/etc/init/quantum-l3-agent.conf
-                                    </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-l3-agent -- \
-    --config-file=/etc/quantum/quantum.conf \
-    -config-file=/etc/quantum/plugins/l3/l3_agent.ini \
-    --log-file /var/log/quantum/agent-l3.log</screen></para>
+                                    </emphasis>file and add :
+                                    <screen>--log-file /var/log/quantum/agent-l3.log</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold">/etc/init/quantum-dhcp-agent.conf
-                                    </emphasis>file and modify :
-                                    <screen>exec start-stop-daemon --start --chuid quantum --exec \
-    /usr/bin/quantum-dhcp-agent -- \
-    --config-file=/etc/quantum/dhcp_agent.ini \
-    --log-file=/var/log/quantum/agent-dhcp.log</screen></para>
+                                    </emphasis>file and add :
+                                    <screen>--log-file=/var/log/quantum/agent-dhcp.log</screen></para>
                             </listitem>
                         </itemizedlist>
                     </listitem>
@@ -851,6 +835,16 @@ admin_user = nova
 admin_password = password</screen></para>
                             </listitem>
                             <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/nova/nova-compute.conf</emphasis> file and modify
+                                    :<screen>[DEFAULT]
+libvirt_type=kvm
+libvirt_ovs_bridge=br-int
+libvirt_vif_type=ethernet
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtOpenVswitchDriver
+libvirt_use_virtio_for_bridges=True</screen></para>
+                            </listitem>
+                            <listitem>
                                 <para>Edit <emphasis role="bold">/etc/nova/nova.conf</emphasis> file
                                     and modify
                                     :<screen>[DEFAULT]
@@ -882,11 +876,13 @@ enabled_apis=metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum_url=http://192.168.0.1:9696
-libvirt_vif_type=ethernet
-linuxnet_vif_driver=nova.network.linux_net.LinuxOVSInterfaceDriver 
+quantum__url=http://192.168.0.1:9696
+quantum_auth_strategy=keystone
+quantum_admin_tenant=service
+quantum_admin_username=quantum
+quantum_admin_password=password
+quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
-libvirt_use_virtio_for_bridges=True
 
 # Cinder #
 volume_api_class=cinder.volume.api.API
