@@ -495,16 +495,10 @@ ovs-vsctl add-port br-eth1 eth1</screen></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                                :<screen>apt-get -y install quantum-server python-cliff \
+                            :<screen>apt-get -y install quantum-server python-cliff \
     quantum-plugin-openvswitch-agent \
     quantum-l3-agent quantum-dhcp-agent \
-    python-pyparsing </screen><db:note
-                                xmlns:db="http://docbook.org/ns/docbook">
-                                <db:para> You may have some <emphasis role="bold">packaging
-                                        issues</emphasis>. You can force the installation by running
-                                    :</db:para>
-                                <screen>dpkg -i --force-overwrite /var/cache/apt/archives/&lt;package-name></screen>
-                            </db:note></para>
+    python-pyparsing</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Quantum services :</para>
@@ -768,7 +762,7 @@ echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
                                     :</para>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/libvirt/libvirtd.conf</emphasis> file
-                                    :<programlisting>listen_tls = 0root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
+                                    :<programlisting>listen_tls = 0
 listen_tcp = 1
 auth_tcp = "none" </programlisting></para>
                                 <para>Modify libvirtd_opts variable in <emphasis role="bold"
