@@ -1,6 +1,6 @@
 #!/bin/sh
 #
-# Keystone Endpoints
+# Quantum Networking
 #
 # Description: Create Virtual Networking fro Quantum
 #
