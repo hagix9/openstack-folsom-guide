@@ -2,7 +2,7 @@
 #
 # Quantum Networking
 #
-# Description: Create Virtual Networking fro Quantum
+# Description: Create Virtual Networking for Quantum
 #
 # Author : Emilien Macchi / StackOps
 #
