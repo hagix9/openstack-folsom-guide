@@ -218,7 +218,10 @@ service novnc restart</pre></li></ul></div></li></ol></div><p>
                             :</p><pre class="screen">apt-get install -y openvswitch-switch</pre></li><li class="listitem"><p>Start Open-vSwitch service &amp; the agent
                             :</p><pre class="screen">service openvswitch-switch start</pre></li><li class="listitem"><p>Configure Open-vSwitch
                             :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1 </pre></li></ol></div><p>
+ovs-vsctl add-br br-eth1
+ovs-vsctl add-br br-ex
+ovs-vsctl br-set-external-id br-ex bridge-id br-ex
+ovs-vsctl add-port br-eth1 eth1</pre></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Quantum"/>Quantum</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
                                 :</p><pre class="screen">apt-get -y install quantum-server python-cliff \
@@ -245,20 +248,16 @@ auth_region = RegionOne
 admin_tenant_name = service
 admin_user = quantum
 admin_password = password
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/dhcp_agent.ini</strong></span> file and modify
-                                    :</p><pre class="screen">auth_url = http://192.168.0.1:35357/v2.0
-db_connection = mysql://quantum:password@localhost:3306/quantum
-use_namespaces = True
-debug = True
-verbose = True
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/api-paste.ini</strong></span> file and modify
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
+metadata_ip = 169.254.169.254 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/api-paste.ini</strong></span> file and modify
                                     :</p><pre class="screen">admin_tenant_name = service
 admin_user = quantum 
 admin_password = password</pre></li></ul></div></li><li class="listitem"><p>Start the services
                             :</p><pre class="screen">service quantum-server restart
 service quantum-plugin-openvswitch-agent restart
 service quantum-dhcp-agent restart
-service quantum-l3-agent restart</pre></li></ol></div><p>
+service quantum-l3-agent restart</pre></li><li class="listitem"><p>Download my <a class="link" href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/quantum-networking.sh" target="_top">Quantum script</a>, edit it belong your wish and launch it
+                            :</p><pre class="screen">./quantum-networking.sh</pre></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Cinder"/>Cinder</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
                             :</p><pre class="screen">apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
@@ -275,9 +274,9 @@ rootwrap_config = /etc/cinder/rootwrap.conf
 sql_connection = mysql://cinder:password@localhost:3306/cinder
 iscsi_helper = ietadm 
 volume_group = cinder-volumes
-rabbit_password="password"
-logdir=/var/log/cinder
-verbose=true
+rabbit_password = password
+logdir = /var/log/cinder
+verbose = true
 auth_strategy = keystone</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/cinder/api-paste.ini</strong></span> file and modify
                                     :</p><pre class="screen">admin_tenant_name = service
 admin_user = cinder 
@@ -430,7 +429,8 @@ service nova-compute restart</pre></li></ul></div></li></ol></div><p>
     -- --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
     --log-file=/var/log/quantum/agent-ovs.log --config-file /etc/quantum/quantum.conf</pre></li><li class="listitem"><p>Configure Open-vSwitch
                             :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+ovs-vsctl add-br br-eth1
+ovs-vsctl add-port br-eth1 eth1 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                             file and modify
                             :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 network_vlan_ranges = default:1000:2999

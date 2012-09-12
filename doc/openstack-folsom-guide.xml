@@ -479,7 +479,10 @@ service novnc restart</screen></para>
                     <listitem>
                         <para>Configure Open-vSwitch
                             :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1 </screen></para>
+ovs-vsctl add-br br-eth1
+ovs-vsctl add-br br-ex
+ovs-vsctl br-set-external-id br-ex bridge-id br-ex
+ovs-vsctl add-port br-eth1 eth1</screen></para>
                     </listitem>
                 </orderedlist>
             </para>
@@ -535,17 +538,8 @@ auth_region = RegionOne
 admin_tenant_name = service
 admin_user = quantum
 admin_password = password
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
-                            </listitem>
-                            <listitem>
-                                <para>Edit <emphasis role="bold"
-                                        >/etc/quantum/dhcp_agent.ini</emphasis> file and modify
-                                    :<screen>auth_url = http://192.168.0.1:35357/v2.0
-db_connection = mysql://quantum:password@localhost:3306/quantum
-use_namespaces = True
-debug = True
-verbose = True
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
+metadata_ip = 169.254.169.254 </screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -562,6 +556,12 @@ admin_password = password</screen></para>
 service quantum-plugin-openvswitch-agent restart
 service quantum-dhcp-agent restart
 service quantum-l3-agent restart</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Download my <link
+                                xlink:href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/quantum-networking.sh"
+                                >Quantum script</link>, edit it belong your wish and launch it
+                            :<screen>./quantum-networking.sh</screen></para>
                     </listitem>
                 </orderedlist>
             </para>        </section>
@@ -601,9 +601,9 @@ rootwrap_config = /etc/cinder/rootwrap.conf
 sql_connection = mysql://cinder:password@localhost:3306/cinder
 iscsi_helper = ietadm 
 volume_group = cinder-volumes
-rabbit_password="password"
-logdir=/var/log/cinder
-verbose=true
+rabbit_password = password
+logdir = /var/log/cinder
+verbose = true
 auth_strategy = keystone</screen></para>
                             </listitem>
                             <listitem>
@@ -915,7 +915,8 @@ service nova-compute restart</screen></para>
                     <listitem>
                         <para>Configure Open-vSwitch
                             :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1 </screen></para>
+ovs-vsctl add-br br-eth1
+ovs-vsctl add-port br-eth1 eth1 </screen></para>
                     </listitem>
                     <listitem>
                         <para>Edit <emphasis role="bold"
