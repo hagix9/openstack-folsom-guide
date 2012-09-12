@@ -180,7 +180,7 @@ enabled_apis=ec2,osapi_compute,metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum__url=http://192.168.0.1:9696
+quantum_url=http://192.168.0.1:9696
 quantum_auth_strategy=keystone
 quantum_admin_tenant=service
 quantum_admin_username=quantum
@@ -226,14 +226,7 @@ ovs-vsctl add-port br-int eth1 </pre></li></ol></div><p>
     quantum-l3-agent quantum-dhcp-agent \
     python-pyparsing </pre><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> You may have some <span class="bold"><strong>packaging
                                         issues</strong></span>. You can force the installation by running
-                                    :</p><pre class="screen">dpkg -i --force-overwrite /var/cache/apt/archives/&lt;package-name&gt;</pre></td></tr></table></div></li><li class="listitem"><p>If you want to minitor by the logs all the quantum services, you must
-                            add at the end of exec command :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-plugin-openvswitch-agent.conf
-                                    </strong></span>file and add :
-                                    </p><pre class="screen">--log-file=/var/log/quantum/agent-ovs.log</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-l3-agent.conf
-                                    </strong></span>file and add :
-                                    </p><pre class="screen">--log-file /var/log/quantum/agent-l3.log</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-dhcp-agent.conf
-                                    </strong></span>file and add :
-                                    </p><pre class="screen">--log-file=/var/log/quantum/agent-dhcp.log</pre></li></ul></div></li><li class="listitem"><p>Configure Quantum services :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/quantum.conf</strong></span> file and modify
+                                    :</p><pre class="screen">dpkg -i --force-overwrite /var/cache/apt/archives/&lt;package-name&gt;</pre></td></tr></table></div></li><li class="listitem"><p>Configure Quantum services :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/quantum.conf</strong></span> file and modify
                                     :</p><pre class="screen">core_plugin = \
     quantum.plugins.openvswitch.ovs_quantum_plugin.OVSQuantumPluginV2
 auth_strategy = keystone
@@ -243,9 +236,7 @@ rabbit_password = password</pre></li><li class="listitem"><p>Edit <span class="b
                                     :</p><pre class="screen">sql_connection = mysql://quantum:password@localhost:3306/quantum
 network_vlan_ranges = default:1000:2999
 integration_bridge = br-int
-bridge_mappings = default:br-eth1
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/l3/l3_agent.ini</strong></span> file and
-                                    modify
+bridge_mappings = default:br-eth1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/l3_agent.ini</strong></span> file and modify
                                     :</p><pre class="screen">[DEFAULT]
 debug = True
 interface_driver = quantum.agent.linux.interface.OVSInterfaceDriver
@@ -286,7 +277,8 @@ iscsi_helper = ietadm
 volume_group = cinder-volumes
 rabbit_password="password"
 logdir=/var/log/cinder
-verbose=true</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/cinder/api-paste.ini</strong></span> file and modify
+verbose=true
+auth_strategy = keystone</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/cinder/api-paste.ini</strong></span> file and modify
                                     :</p><pre class="screen">admin_tenant_name = service
 admin_user = cinder 
 admin_password = password</pre></li><li class="listitem"><p>Create the volume
@@ -298,7 +290,7 @@ pvcreate /dev/sdb1
 vgcreate cinder-volumes /dev/sdb1</pre></li><li class="listitem"><p>Create Cinder tables into the database
                                     :</p><pre class="screen">cinder-manage db sync</pre></li><li class="listitem"><p>Restart the services :
                                     :</p><pre class="screen">service cinder-api restart
-service cinder-scheduler     restart
+service cinder-scheduler restart
 service cinder-volume restart</pre></li></ul></div></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Horizon"/>Horizon</h3></div></div></div><p>Install the packages
                 :</p><pre class="screen">    apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
@@ -405,6 +397,9 @@ quantum_admin_username=quantum
 quantum_admin_password=password
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
+
+# Compute #
+compute_driver=libvirt.LibvirtDriver
 
 # Cinder #
 volume_api_class=cinder.volume.api.API
