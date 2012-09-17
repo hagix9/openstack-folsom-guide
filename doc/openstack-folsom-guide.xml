@@ -383,8 +383,7 @@ admin_password = password</screen>You
                                     should also <emphasis role="bold">delete</emphasis> each
                                     composite with "<emphasis role="bold">volume</emphasis>".</para>
                                 <para>We can do that manually or with this command
-                                    :<screen>cat /etc/nova/api-paste.ini |grep -v "volume" > paste.ini
-mv paste.ini /etc/nova/api-paste.ini</screen></para>
+                                    :<screen>sed -i '/volume/d' /etc/nova/api-paste.ini</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold">/etc/nova/nova.conf</emphasis> file
@@ -741,8 +740,8 @@ echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
             <para>
                 <orderedlist>
                     <listitem>
-                        <para>Install the packages
-                            :<screen>apt-get install -y kvm libvirt-bin</screen></para>
+                        <para>Install the packages that we need
+                            :<screen>apt-get install -y kvm libvirt-bin pm-utils</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure libvirt :</para>
@@ -847,7 +846,7 @@ enabled_apis=metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum__url=http://192.168.0.1:9696
+quantum_url=http://192.168.0.1:9696
 quantum_auth_strategy=keystone
 quantum_admin_tenant=service
 quantum_admin_username=quantum
@@ -899,18 +898,10 @@ service nova-compute restart</screen></para>
                             :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
                     </listitem>
                     <listitem>
-                        <para>Edit <emphasis role="bold"
-                                >/etc/init/quantum-plugin-openvswitch-agent.conf </emphasis>file and
-                            modify
-                            :<screen>exec start-stop-daemon --start --chuid quantum --exec /usr/bin/quantum-openvswitch-agent \
-    -- --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
-    --log-file=/var/log/quantum/agent-ovs.log --config-file /etc/quantum/quantum.conf</screen></para>
-                    </listitem>
-                    <listitem>
                         <para>Configure Open-vSwitch
                             :<screen>ovs-vsctl add-br br-int
 ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 eth1 </screen></para>
+ovs-vsctl add-port br-eth1 eth1</screen></para>
                     </listitem>
                     <listitem>
                         <para>Edit <emphasis role="bold"

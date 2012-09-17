@@ -149,8 +149,7 @@ admin_user = nova
 admin_password = password</pre><p>You
                                     should also <span class="bold"><strong>delete</strong></span> each
                                     composite with "<span class="bold"><strong>volume</strong></span>".</p><p>We can do that manually or with this command
-                                    :</p><pre class="screen">cat /etc/nova/api-paste.ini |grep -v "volume" &gt; paste.ini
-mv paste.ini /etc/nova/api-paste.ini</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/nova.conf</strong></span> file
+                                    :</p><pre class="screen">sed -i '/volume/d' /etc/nova/api-paste.ini</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/nova.conf</strong></span> file
                                     and modify
                                     :</p><pre class="screen">[DEFAULT]
 
@@ -328,8 +327,8 @@ echo 1 &gt; /proc/sys/net/ipv4/ip_forward </pre><p>
                                 :</p><pre class="screen">apt-get install -y ntp</pre></li><li class="listitem"><p>Configure <span class="bold"><strong>/etc/ntp.conf</strong></span> file
                                     :</p><pre class="screen">server 192.168.0.1</pre></li><li class="listitem"><p>Restart the service
                                 :</p><pre class="screen">service ntp restart</pre></li></ul></div></li></ol></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Hypervisor"/>Hypervisor</h3></div></div></div><p>
-                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
-                            :</p><pre class="screen">apt-get install -y kvm libvirt-bin</pre></li><li class="listitem"><p>Configure libvirt :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/libvirt/qemu.conf</strong></span>
+                </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages that we need
+                            :</p><pre class="screen">apt-get install -y kvm libvirt-bin pm-utils</pre></li><li class="listitem"><p>Configure libvirt :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/libvirt/qemu.conf</strong></span>
                                     file and add
                                     :</p><pre class="screen">cgroup_device_acl = [
     "/dev/null", "/dev/full", "/dev/zero",
@@ -387,7 +386,7 @@ enabled_apis=metadata
 
 # Networking #
 network_api_class=nova.network.quantumv2.api.API
-quantum__url=http://192.168.0.1:9696
+quantum_url=http://192.168.0.1:9696
 quantum_auth_strategy=keystone
 quantum_admin_tenant=service
 quantum_admin_username=quantum
@@ -421,14 +420,10 @@ verbose=true</pre></li><li class="listitem"><p>Restart Nova services
 service nova-compute restart</pre></li></ul></div></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="OpenvSwitch"/>Open-vSwitch</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
-                            :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/init/quantum-plugin-openvswitch-agent.conf </strong></span>file and
-                            modify
-                            :</p><pre class="screen">exec start-stop-daemon --start --chuid quantum --exec /usr/bin/quantum-openvswitch-agent \
-    -- --config-file=/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini \
-    --log-file=/var/log/quantum/agent-ovs.log --config-file /etc/quantum/quantum.conf</pre></li><li class="listitem"><p>Configure Open-vSwitch
+                            :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent </pre></li><li class="listitem"><p>Configure Open-vSwitch
                             :</p><pre class="screen">ovs-vsctl add-br br-int
 ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 eth1 </pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+ovs-vsctl add-port br-eth1 eth1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                             file and modify
                             :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 network_vlan_ranges = default:1000:2999
