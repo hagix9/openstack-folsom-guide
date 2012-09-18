@@ -115,8 +115,7 @@ echo "source novarc"&gt;&gt;.bashrc</pre></li></ul></div></li><li class="listite
                             :</p><pre class="screen">./keystone-endpoints.sh</pre></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Glance"/>Glance</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
-                            :</p><pre class="screen">apt-get -y install glance glance-api python-glanceclient glance-common</pre></li><li class="listitem"><p>Configure Glance :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/glance-api.conf</strong></span> and
-                                        <span class="bold"><strong>/etc/glance-registry.conf</strong></span>
+                            :</p><pre class="screen">apt-get -y install glance glance-api python-glanceclient glance-common</pre></li><li class="listitem"><p>Configure Glance :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/glance/glance-api.conf</strong></span> and <span class="bold"><strong>/etc/glance/glance-registry.conf</strong></span>
                                     files and modify
                                     :</p><pre class="screen">sql_connection = mysql://glance:password@localhost/glance
 admin_tenant_name = service
@@ -181,7 +180,7 @@ enabled_apis=ec2,osapi_compute,metadata
 network_api_class=nova.network.quantumv2.api.API
 quantum_url=http://192.168.0.1:9696
 quantum_auth_strategy=keystone
-quantum_admin_tenant=service
+quantum_admin_tenant_name=service
 quantum_admin_username=quantum
 quantum_admin_password=password
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
@@ -345,7 +344,7 @@ auth_tcp = "none" </pre><p>Modify libvirtd_opts variable in <span class="bold"><
                                     :</p><pre class="screen">service libvirt-bin restart</pre></li></ul></div></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Nova-Compute-and-API"/>Nova</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
-                            :</p><pre class="screen">apt-get -y install nova-api nova-compute-kvm novnc</pre></li><li class="listitem"><p>Configure Nova :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/api-paste.ini</strong></span>
+                            :</p><pre class="screen">apt-get -y install nova-api-metadata nova-compute-kvm novnc</pre></li><li class="listitem"><p>Configure Nova :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/api-paste.ini</strong></span>
                                     file and modify
                                     :</p><pre class="screen">admin_tenant_name = service 
 admin_user = nova 
@@ -388,7 +387,7 @@ enabled_apis=metadata
 network_api_class=nova.network.quantumv2.api.API
 quantum_url=http://192.168.0.1:9696
 quantum_auth_strategy=keystone
-quantum_admin_tenant=service
+quantum_admin_tenant_name=service
 quantum_admin_username=quantum
 quantum_admin_password=password
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
