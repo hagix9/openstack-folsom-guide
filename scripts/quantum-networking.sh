@@ -4,15 +4,61 @@
 #
 # Description: Create Virtual Networking for Quantum
 #
-# Author : Emilien Macchi / StackOps
+# Authors : 
+# Emilien Macchi / StackOps
+# Endre Karlson / Bouvet ASA
 #
 # Inspired by DevStack script
 #
 # Support: openstack@lists.launchpad.net
 # License: Apache Software License (ASL) 2.0
 
+get_id () {
+        echo `$@ | awk '/ id / { print $4 }'`
+}
 
 # For each tenant, change private network informations :
+
+# create_net demo demo-net demo-router 10.5.5.0/24 10.5.5.2
+create_net() {
+    local tenant_name="$1"
+    local network_name="$2"
+    local router_name="$3"
+    local fixed_range="$4"
+    local network_gateway="$5"
+    local tenant_id=$(keystone tenant-list | grep " $tenant_name " | awk '{print $2}')
+
+    # We create the network, the subnet and the router :
+    net_id=$(get_id quantum net-create --tenant_id $tenant_id $network_name)
+    subnet_id=$(get_id quantum subnet-create --tenant_id $tenant_id --ip_version 4 --gateway $network_gateway $net_id $fixed_range)
+    router_id=$(get_id quantum router-create --tenant_id $tenant_id $router_name)
+    quantum router-interface-add $router_id $subnet_id
+}
+
+create_ext_net() {
+    local ext_net_name="$1"
+    local ext_net_range="$2"
+
+    ext_net_id=$(get_id quantum net-create $ext_net_name -- --router:external=True)
+    ext_gw_ip=$(quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range -- --enable_dhcp=False | grep 'gateway_ip' | awk '{print $4}')
+}
+
+assoc_floating_ip() {
+    local router_name="$1"
+    local ext_net_name="$2"
+
+    router_id=$(get_id quantum router-show $router_name)
+    ext_net_id=$(get_id quantum net-show $ext_net_name)
+    quantum router-gateway-set $router_id $ext_net_id
+}
+
+ext_net_gw_ip() {
+    local ext_net_name="$1"
+
+    subnet_id=$(quantum net-show $ext_net_name | awk '/ subnets / {print $4}')
+    echo $(quantum subnet-show $subnet_id | awk '/ gateway_ip / {print $4}')
+}
+
 TENANT_NAME="demo"
 NETWORK_NAME="demo-net"
 ROUTER_NAME="demo-router"
@@ -20,20 +66,16 @@ FIXED_RANGE="10.5.5.0/24"
 NETWORK_GATEWAY="10.5.5.2"
 
 # We use one floating range attached on one external bridge :
-FLOATING_RANGE="192.168.0.128/25"
-PUBLIC_BRIDGE=br-ex
-TENANT_ID=$(keystone tenant-list | grep " $TENANT_NAME " | awk '{print $2}')
+EXT_NET_NAME=ext-net
+EXT_NET_RANGE="192.168.0.128/25"
+EXT_NET_BRIDGE=br-ex
 
-# We create the network, the subnet and the router :
-NET_ID=$(quantum net-create --tenant_id $TENANT_ID $NETWORK_NAME | grep ' id ' | awk '{print $4}')
-SUBNET_ID=$(quantum subnet-create --tenant_id $TENANT_ID --ip_version 4 --gateway $NETWORK_GATEWAY $NET_ID $FIXED_RANGE | grep ' id ' | awk '{print $4}')
-ROUTER_ID=$(quantum router-create --tenant_id $TENANT_ID $ROUTER_NAME | grep ' id ' | awk '{print $4}')
-quantum router-interface-add $ROUTER_ID $SUBNET_ID
+create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
+create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE
+assoc_floating_ip $ROUTER_NAME $EXT_NET_NAME
 
-# We connect the router to external network :
-EXT_NET_ID=$(quantum net-create ext_net -- --router:external=True | grep ' id ' | awk '{print $4}')
-EXT_GW_IP=$(quantum subnet-create --ip_version 4 $EXT_NET_ID $FLOATING_RANGE -- --enable_dhcp=False | grep 'gateway_ip' | awk '{print $4}')
-quantum router-gateway-set $ROUTER_ID $EXT_NET_ID
-CIDR_LEN=${FLOATING_RANGE#*/}
-ip addr add $EXT_GW_IP/$CIDR_LEN dev $PUBLIC_BRIDGE
-ip link set $PUBLIC_BRIDGE up
+EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
+CIDR_LEN=${EXT_NET_RANGE#*/}
+
+ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
+ip link set $EXT_NET_BRIDGE up
