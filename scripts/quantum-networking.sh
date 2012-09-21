@@ -59,7 +59,7 @@ create_ext_net() {
     local ext_net_range="$2"
 
     ext_net_id=$(get_id quantum net-create $ext_net_name -- --router:external=True)
-    ext_gw_ip=$(quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway $ext_net_gateway -- --enable_dhcp=False | grep 'gateway_ip' | awk '{print $4}')
+    quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway_ip $ext_net_gateway --enable_dhcp=False
 }
 
 connect_TenantRouter_to_ExternalNetwork() {
