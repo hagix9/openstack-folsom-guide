@@ -57,6 +57,7 @@ create_net() {
 create_ext_net() {
     local ext_net_name="$1"
     local ext_net_range="$2"
+    local ext_net_gateway="$4"
 
     ext_net_id=$(get_id quantum net-create $ext_net_name -- --router:external=True)
     quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway_ip $ext_net_gateway --enable_dhcp=False
@@ -79,8 +80,5 @@ ext_net_gw_ip() {
 }
 
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
-create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE
+create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE $EXT_NET_GATEWAY
 connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
-
-EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
-CIDR_LEN=${EXT_NET_RANGE#*/}
