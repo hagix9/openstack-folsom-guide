@@ -13,11 +13,30 @@
 # Support: openstack@lists.launchpad.net
 # License: Apache Software License (ASL) 2.0
 
+### Private Network #######
+TENANT_NAME="demo"
+NETWORK_NAME="demo-net"
+ROUTER_NAME="demo-router"
+FIXED_RANGE="10.5.5.0/24"
+NETWORK_GATEWAY="10.5.5.2"
+###########################
+
+
+### Public Network ############################################
+# We use one floating range attached on one external bridge : #
+EXT_NET_NAME=ext-net
+EXT_NET_RANGE="192.168.0.128/25"
+EXT_NET_BRIDGE=br-ex
+
+# IP of Physical Router :
+EXT_NET_GATEWAY="192.168.0.254"
+
+###############################################################
+
 get_id () {
         echo `$@ | awk '/ id / { print $4 }'`
 }
 
-# For each tenant, change private network informations :
 
 # create_net demo demo-net demo-router 10.5.5.0/24 10.5.5.2
 create_net() {
@@ -40,10 +59,10 @@ create_ext_net() {
     local ext_net_range="$2"
 
     ext_net_id=$(get_id quantum net-create $ext_net_name -- --router:external=True)
-    ext_gw_ip=$(quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range -- --enable_dhcp=False | grep 'gateway_ip' | awk '{print $4}')
+    ext_gw_ip=$(quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway $ext_net_gateway -- --enable_dhcp=False | grep 'gateway_ip' | awk '{print $4}')
 }
 
-assoc_floating_ip() {
+connect_TenantRouter_to_ExternalNetwork() {
     local router_name="$1"
     local ext_net_name="$2"
 
@@ -59,23 +78,12 @@ ext_net_gw_ip() {
     echo $(quantum subnet-show $subnet_id | awk '/ gateway_ip / {print $4}')
 }
 
-TENANT_NAME="demo"
-NETWORK_NAME="demo-net"
-ROUTER_NAME="demo-router"
-FIXED_RANGE="10.5.5.0/24"
-NETWORK_GATEWAY="10.5.5.2"
-
-# We use one floating range attached on one external bridge :
-EXT_NET_NAME=ext-net
-EXT_NET_RANGE="192.168.0.128/25"
-EXT_NET_BRIDGE=br-ex
-
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
 create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE
-assoc_floating_ip $ROUTER_NAME $EXT_NET_NAME
+connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
 
 EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
 CIDR_LEN=${EXT_NET_RANGE#*/}
 
-ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
-ip link set $EXT_NET_BRIDGE up
+#ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
+#ip link set $EXT_NET_BRIDGE up
