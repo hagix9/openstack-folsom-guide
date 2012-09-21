@@ -184,6 +184,7 @@ quantum_admin_tenant_name=service
 quantum_admin_username=quantum
 quantum_admin_password=password
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 # Cinder #
@@ -353,7 +354,7 @@ admin_password = password</pre></li><li class="listitem"><p>Edit <span class="bo
 libvirt_type=kvm
 libvirt_ovs_bridge=br-int
 libvirt_vif_type=ethernet
-libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtOpenVswitchDriver
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 libvirt_use_virtio_for_bridges=True</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/nova/nova.conf</strong></span> file
                                     and modify
                                     :</p><pre class="screen">[DEFAULT]
@@ -391,6 +392,7 @@ quantum_admin_tenant_name=service
 quantum_admin_username=quantum
 quantum_admin_password=password
 quantum_admin_auth_url=http://192.168.0.1:35357/v2.0
+libvirt_vif_driver=nova.virt.libvirt.vif.LibvirtHybridOVSBridgeDriver
 firewall_driver=nova.virt.firewall.NoopFirewallDriver
 
 # Compute #
