@@ -49,7 +49,7 @@ create_net() {
 
     # We create the network, the subnet and the router :
     net_id=$(get_id quantum net-create --tenant_id $tenant_id $network_name)
-    subnet_id=$(get_id quantum subnet-create --tenant_id $tenant_id --ip_version 4 --gateway $network_gateway $net_id $fixed_range)
+    subnet_id=$(get_id quantum subnet-create --tenant_id $tenant_id --ip_version 4 $net_id $fixed_range --gateway_ip $network_gateway)
     router_id=$(get_id quantum router-create --tenant_id $tenant_id $router_name)
     quantum router-interface-add $router_id $subnet_id
 }
@@ -84,6 +84,3 @@ connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
 
 EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
 CIDR_LEN=${EXT_NET_RANGE#*/}
-
-#ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
-#ip link set $EXT_NET_BRIDGE up
