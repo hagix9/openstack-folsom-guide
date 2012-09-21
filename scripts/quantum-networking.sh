@@ -13,7 +13,9 @@
 # Support: openstack@lists.launchpad.net
 # License: Apache Software License (ASL) 2.0
 
+###########################
 ### Private Network #######
+###########################
 TENANT_NAME="demo"
 NETWORK_NAME="demo-net"
 ROUTER_NAME="demo-router"
@@ -22,15 +24,16 @@ NETWORK_GATEWAY="10.5.5.2"
 ###########################
 
 
+
+##############################################################
 ### Public Network ############################################
 # We use one floating range attached on one external bridge : #
+###############################################################
 EXT_NET_NAME=ext-net
 EXT_NET_RANGE="192.168.0.128/25"
 EXT_NET_BRIDGE=br-ex
-
-# IP of Physical Router :
+# IP of the Public Network Gateway (i.e.external router) :
 EXT_NET_GATEWAY="192.168.0.254"
-
 ###############################################################
 
 get_id () {
@@ -38,7 +41,7 @@ get_id () {
 }
 
 
-# create_net demo demo-net demo-router 10.5.5.0/24 10.5.5.2
+# Create the Tenant private network :
 create_net() {
     local tenant_name="$1"
     local network_name="$2"
@@ -47,13 +50,13 @@ create_net() {
     local network_gateway="$5"
     local tenant_id=$(keystone tenant-list | grep " $tenant_name " | awk '{print $2}')
 
-    # We create the network, the subnet and the router :
     net_id=$(get_id quantum net-create --tenant_id $tenant_id $network_name)
     subnet_id=$(get_id quantum subnet-create --tenant_id $tenant_id --ip_version 4 $net_id $fixed_range --gateway_ip $network_gateway)
     router_id=$(get_id quantum router-create --tenant_id $tenant_id $router_name)
     quantum router-interface-add $router_id $subnet_id
 }
 
+# Create External Network :
 create_ext_net() {
     local ext_net_name="$1"
     local ext_net_range="$2"
@@ -63,6 +66,7 @@ create_ext_net() {
     quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway_ip $ext_net_gateway --enable_dhcp=False
 }
 
+# Connect the Tenant Virtual Router to External Network :
 connect_TenantRouter_to_ExternalNetwork() {
     local router_name="$1"
     local ext_net_name="$2"
@@ -82,3 +86,10 @@ ext_net_gw_ip() {
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
 create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE $EXT_NET_GATEWAY
 connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
+
+EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
+CIDR_LEN=${EXT_NET_RANGE#*/}
+
+# Configure br-ex to reach public network :
+ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
+ip link set $EXT_NET_BRIDGE up

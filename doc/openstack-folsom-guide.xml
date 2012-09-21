@@ -57,8 +57,8 @@
             component.</para></section>
     <section xml:id="Requirements"><info><title>Requirements</title></info>
     
-    <para>You need at least two machines (virtual or physical) with 2 NIC. You need also to download
-            Ubuntu 12.04 (LTS).</para>
+    <para>You need at least two machines (virtual or physical) with 3 NIC for controller node and 2
+            NIC for compute node. You need also to download Ubuntu 12.04 (LTS).</para>
     <db:note xmlns:db="http://docbook.org/ns/docbook"><db:para> Run all commands as the root user</db:para></db:note>
   </section>
     <section xml:id="Controller-Node"><info><title>Controller Node</title></info>
@@ -107,6 +107,13 @@ auto eth0
 # Bridged Network
 auto eth1
     iface eth1 inet manual
+    up ifconfig $IFACE 0.0.0.0 up
+    up ip link set $IFACE promisc on 
+    down ip link set $IFACE promisc off
+    down ifconfig $IFACE down
+
+auto eth2
+    iface eth2 inet manual
     up ifconfig $IFACE 0.0.0.0 up
     up ip link set $IFACE promisc on 
     down ip link set $IFACE promisc off
@@ -484,7 +491,8 @@ service novnc restart</screen></para>
 ovs-vsctl add-br br-eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
-ovs-vsctl add-port br-eth1 eth1</screen></para>
+ovs-vsctl add-port br-eth1 eth1
+ovs-vsctl add-port br-ex eth2</screen></para>
                     </listitem>
                 </orderedlist>
             </para>
