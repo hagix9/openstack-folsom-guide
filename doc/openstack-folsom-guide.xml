@@ -564,8 +564,10 @@ service quantum-l3-agent restart</screen></para>
                     <listitem>
                         <para>Download my <link
                                 xlink:href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/quantum-networking.sh"
-                                >Quantum script</link>, edit it belong your wish and launch it
-                            :<screen>./quantum-networking.sh</screen></para>
+                                >Quantum script</link>. Before launching it, you should modify
+                            networking informations inside the script. All is commented and you can
+                            customize belong your
+                            needs.<screen>./quantum-networking.sh</screen></para>
                     </listitem>
                 </orderedlist>
             </para>        </section>
@@ -932,6 +934,10 @@ root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                     </listitem>
                 </orderedlist>
             </para>        </section>
+    </section>
+    <section xml:id="Play"><info><title>Create your first VM</title></info>
+        
+        <para>This section is going to be written very soon.</para>
     </section>
     <section xml:id="Credits">
         <info>
