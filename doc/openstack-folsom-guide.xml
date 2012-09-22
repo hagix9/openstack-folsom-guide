@@ -43,7 +43,7 @@
                     </row>
                     <row>
                         <entry>Services</entry>
-                        <entry>MySQL, RabbitMQ, Nova, Glance, Keystone, Quantum</entry>
+                        <entry>MySQL, RabbitMQ, Nova, Cinder, Glance, Keystone, Quantum</entry>
                         <entry>nova-compute, KVM, nova-api</entry>
                     </row>
                 </tbody>

@@ -20,7 +20,7 @@ TENANT_NAME="demo"
 NETWORK_NAME="demo-net"
 ROUTER_NAME="demo-router"
 FIXED_RANGE="10.5.5.0/24"
-NETWORK_GATEWAY="10.5.5.2"
+NETWORK_GATEWAY="10.5.5.1"
 ###########################
 
 
@@ -30,10 +30,11 @@ NETWORK_GATEWAY="10.5.5.2"
 # We use one floating range attached on one external bridge : #
 ###############################################################
 EXT_NET_NAME=ext-net
-EXT_NET_RANGE="192.168.0.128/25"
+EXT_NET_RANGE="192.168.1.128/25"
+EXT_NET_NETMASK="24"
 EXT_NET_BRIDGE=br-ex
 # IP of the Public Network Gateway (i.e.external router) :
-EXT_NET_GATEWAY="192.168.0.254"
+EXT_NET_GATEWAY="192.168.1.254"
 ###############################################################
 
 get_id () {
@@ -80,7 +81,7 @@ ext_net_gw_ip() {
     local ext_net_name="$1"
 
     subnet_id=$(quantum net-show $ext_net_name | awk '/ subnets / {print $4}')
-    echo $(quantum subnet-show $subnet_id | awk '/ gateway_ip / {print $4}')
+    echo $(quantum subnet-show $subnet_id | awk '/ allocation_pools / {print $5}' | cut -d\" -f2)
 }
 
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
@@ -91,5 +92,5 @@ EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
 CIDR_LEN=${EXT_NET_RANGE#*/}
 
 # Configure br-ex to reach public network :
-ip addr add $EXT_GW_IP/$CIDR_LEN dev $EXT_NET_BRIDGE
+ip addr add $EXT_GW_IP/$EXT_NET_NETMASK dev $EXT_NET_BRIDGE
 ip link set $EXT_NET_BRIDGE up
