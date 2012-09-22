@@ -24,19 +24,33 @@ NETWORK_GATEWAY="10.5.5.1"
 ###########################
 
 
-
 ##############################################################
-### Public Network ############################################
-# We use one floating range attached on one external bridge : #
-###############################################################
+### Public Network ###########################################
+##############################################################
+
+# Name of External Network :
 EXT_NET_NAME=ext-net
-EXT_NET_RANGE="192.168.1.128/25"
-EXT_NET_NETMASK="24"
+
+# External Network :
+EXT_NET_CIDR="192.168.1.128/24"
+EXT_NET_LEN=${EXT_NET_CIDR#*/}
+
+# External bridge that we have configured into l3_agent.ini :
 EXT_NET_BRIDGE=br-ex
+
+# IP of external bridge (br-ex) :
+EXT_GW_IP="192.168.1.168"
+
 # IP of the Public Network Gateway (i.e.external router) :
-EXT_NET_GATEWAY="192.168.1.254"
+EXT_NET_GATEWAY="192.168.1.1"
+
+# Floating IP range :
+POOL_FLOATING_START="192.168.1.130"
+POOL_FLOATING_END="192.168.1.150"
+
 ###############################################################
 
+# Function to get ID :
 get_id () {
         echo `$@ | awk '/ id / { print $4 }'`
 }
@@ -60,11 +74,14 @@ create_net() {
 # Create External Network :
 create_ext_net() {
     local ext_net_name="$1"
-    local ext_net_range="$2"
+    local ext_net_cidr="$2"
     local ext_net_gateway="$4"
+    local pool_floating_start="$5"
+    local pool_floating_end="$6"
 
     ext_net_id=$(get_id quantum net-create $ext_net_name -- --router:external=True)
-    quantum subnet-create --ip_version 4 $ext_net_id $ext_net_range --gateway_ip $ext_net_gateway --enable_dhcp=False
+    quantum subnet-create --ip_version 4 --allocation-pool start=$pool_floating_start,end=$pool_floating_end \
+    --gateway $ext_net_gateway $ext_net_id $ext_net_cidr -- --enable_dhcp=False
 }
 
 # Connect the Tenant Virtual Router to External Network :
@@ -77,20 +94,11 @@ connect_TenantRouter_to_ExternalNetwork() {
     quantum router-gateway-set $router_id $ext_net_id
 }
 
-ext_net_gw_ip() {
-    local ext_net_name="$1"
-
-    subnet_id=$(quantum net-show $ext_net_name | awk '/ subnets / {print $4}')
-    echo $(quantum subnet-show $subnet_id | awk '/ allocation_pools / {print $5}' | cut -d\" -f2)
-}
 
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
-create_ext_net $EXT_NET_NAME $EXT_NET_RANGE $EXT_NET_BRIDGE $EXT_NET_GATEWAY
+create_ext_net $EXT_NET_NAME $EXT_NET_CIDR $EXT_NET_BRIDGE $EXT_NET_GATEWAY $POOL_FLOATING_START $POOL_FLOATING_END
 connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
 
-EXT_GW_IP=$(ext_net_gw_ip $EXT_NET_NAME)
-CIDR_LEN=${EXT_NET_RANGE#*/}
-
 # Configure br-ex to reach public network :
-ip addr add $EXT_GW_IP/$EXT_NET_NETMASK dev $EXT_NET_BRIDGE
+ip addr add $EXT_GW_IP/$EXT_NET_LEN dev $EXT_NET_BRIDGE
 ip link set $EXT_NET_BRIDGE up
