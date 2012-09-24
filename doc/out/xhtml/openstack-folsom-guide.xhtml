@@ -5,8 +5,10 @@
             share my experience with the community.</p><p>This document helps anyone who wants to deploy Folsom of
             OpenStack for development purpose.</p><div class="table"><a id="d5e15"/><p class="title"><strong>Table 1. Architecture and informations</strong></p><div class="table-contents"><table border="1"><colgroup><col class="c1"/><col class="c2"/><col class="newCol3"/></colgroup><thead><tr><th> </th><th>controller</th><th>compute</th></tr></thead><tbody><tr><td>Managment Network</td><td>192.168.0.1/24</td><td>192.168.0.2/24</td></tr><tr><td>Hostname</td><td>folsom-controller</td><td>folsom-compute</td></tr><tr><td>Services</td><td>MySQL, RabbitMQ, Nova, Cinder, Glance, Keystone, Quantum</td><td>nova-compute, KVM, nova-api</td></tr></tbody></table></div></div><br class="table-break"/><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> That's a basic architecture, of course <span class="bold"><strong>you can add many
                     compute nodes as you want</strong></span>.</p></td></tr></table></div><p>Since Folsom code has not been release into stable Ubuntu Packages, we are going to use "<a class="link" href="https://launchpad.net/~openstack-ubuntu-testing/+archive/folsom-trunk-testing" target="_top">Folsom Testing Packages</a>" which are built from master for each
-            component.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Requirements"/>Requirements</h2></div></div></div><p>You need at least two machines (virtual or physical) with 3 NIC for controller node and 2
-            NIC for compute node. You need also to download Ubuntu 12.04 (LTS).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> Run all commands as the root user</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Controller-Node"/>Controller Node</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Operating-Sytem-Controller"/>Operating System</h3></div></div></div><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install Ubuntu with this parameters :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Time zone : <span class="bold"><strong>UTC</strong></span></p></li><li class="listitem"><p>Hostname : <span class="bold"><strong>folsom-controller</strong></span></p></li><li class="listitem"><p>Packages : <span class="bold"><strong>OpenSSH-Server</strong></span></p></li></ul></div><p> After OS Installation, reboot the server .</p></li><li class="listitem"><p>Add the repository and upgrade Ubuntu
+            component.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Requirements"/>Requirements</h2></div></div></div><p>You need at least two machines (virtual or physical) with 3 NIC (Managment Network + VMs
+            Traffic in tunnel mode + Public Network) for controller node and 2 NIC (Managment
+            Network + VMs Traffic in tunnel mode) for compute node. You need also to download Ubuntu
+            12.04 (LTS).</p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p> Run all commands as the root user</p></td></tr></table></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Controller-Node"/>Controller Node</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Operating-Sytem-Controller"/>Operating System</h3></div></div></div><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install Ubuntu with this parameters :</p><div class="itemizedlist"><ul class="itemizedlist" style="list-style-type: disc; "><li class="listitem"><p>Time zone : <span class="bold"><strong>UTC</strong></span></p></li><li class="listitem"><p>Hostname : <span class="bold"><strong>folsom-controller</strong></span></p></li><li class="listitem"><p>Packages : <span class="bold"><strong>OpenSSH-Server</strong></span></p></li></ul></div><p> After OS Installation, reboot the server .</p></li><li class="listitem"><p>Add the repository and upgrade Ubuntu
                         :</p><pre class="screen">apt-get install -y python-software-properties
 add-apt-repository ppa:openstack-ubuntu-testing/folsom-trunk-testing
 add-apt-repository ppa:openstack-ubuntu-testing/folsom-deps-staging
@@ -20,14 +22,13 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# Bridged Network
+# VMs Networks
 auto eth1
-    iface eth1 inet manual
-    up ifconfig $IFACE 0.0.0.0 up
-    up ip link set $IFACE promisc on 
-    down ip link set $IFACE promisc off
-    down ifconfig $IFACE down
+    iface eth1 inet static
+    address 10.0.0.3
+    netmask 255.255.255.0
 
+# Public Bridge
 auto eth2
     iface eth2 inet manual
     up ifconfig $IFACE 0.0.0.0 up
@@ -225,10 +226,8 @@ service novnc restart</pre></li></ul></div></li></ol></div><p>
                             :</p><pre class="screen">apt-get install -y openvswitch-switch</pre></li><li class="listitem"><p>Start Open-vSwitch service &amp; the agent
                             :</p><pre class="screen">service openvswitch-switch start</pre></li><li class="listitem"><p>Configure Open-vSwitch
                             :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-br br-eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
-ovs-vsctl add-port br-eth1 eth1
 ovs-vsctl add-port br-ex eth2</pre></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Quantum"/>Quantum</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
@@ -242,10 +241,16 @@ auth_strategy = keystone
 fake_rabbit = False
 rabbit_password = password</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                                     file and modify
-                                    :</p><pre class="screen">sql_connection = mysql://quantum:password@localhost:3306/quantum
-network_vlan_ranges = default:1000:2999
+                                    :</p><pre class="screen">[DATABASE]
+sql_connection = mysql://quantum:password@localhost:3306/quantum
+reconnect_interval = 2
+[OVS]
+tunnel_id_ranges = 1:1000
 integration_bridge = br-int
-bridge_mappings = default:br-eth1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/l3_agent.ini</strong></span> file and modify
+tunnel_bridge = br-tun
+local_ip = 10.0.0.3
+[AGENT]
+root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/l3_agent.ini</strong></span> file and modify
                                     :</p><pre class="screen">[DEFAULT]
 debug = True
 interface_driver = quantum.agent.linux.interface.OVSInterfaceDriver
@@ -317,13 +322,11 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# Bridged Network
+# VMs Networks
 auto eth1
-    iface eth1 inet manual
-    up ifconfig $IFACE 0.0.0.0 up
-    up ip link set $IFACE promisc on 
-    down ip link set $IFACE promisc off
-    down ifconfig $IFACE down</pre><p>Then,
+    iface eth1 inet static
+    address 10.0.0.4
+    netmask 255.255.255.0</pre><p>Then,
                         restart network service :</p><pre class="screen">service networking restart</pre><p>
                         </p><div class="note" style="margin-left: 0.5in; margin-right: 0.5in;"><table border="0" summary="Note"><tr><td rowspan="2" align="center" valign="top" width="25"><img alt="[Note]" src="/media/DATA/Mes Documents/Oxygen XML Author 14/frameworks/docbook/xsl/images/note.png"/></td><th align="left">Note</th></tr><tr><td align="left" valign="top"><p>If <span class="bold"><strong>eth1</strong></span> is connected to a
                                 Switch, it should be in tagged mode.</p></td></tr></table></div><p>
@@ -434,15 +437,18 @@ service nova-compute restart</pre></li></ul></div></li></ol></div><p>
             </p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="OpenvSwitch"/>Open-vSwitch</h3></div></div></div><p>
                 </p><div class="orderedlist"><ol class="orderedlist" type="1"><li class="listitem"><p>Install the packages
                             :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent </pre></li><li class="listitem"><p>Configure Open-vSwitch
-                            :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 eth1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+                            :</p><pre class="screen">ovs-vsctl add-br br-int</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                             file and modify
-                            :</p><pre class="screen">sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
-network_vlan_ranges = default:1000:2999
+                            :</p><pre class="screen">[DATABASE]
+sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
+reconnect_interval = 2
+[OVS]
+tunnel_id_ranges = 1:1000
 integration_bridge = br-int
-bridge_mappings = default:br-eth1
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Start the Agent
+tunnel_bridge = br-tun
+local_ip = 10.0.0.4
+[AGENT]
+root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</pre></li><li class="listitem"><p>Start the Agent
                             :</p><pre class="screen">service quantum-plugin-openvswitch-agent restart</pre></li></ol></div><p>
             </p></div></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Play"/>Create your first VM</h2></div></div></div><p>This section is going to be written very soon.</p></div><div class="section"><div class="titlepage"><div><div><h2 class="title" style="clear: both"><a id="Credits"/>Credits</h2></div></div></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="Thanks"/>Thank's to ...</h3></div></div></div><p>John Griffith - SolidFire</p><p>Martin Loschwitz - Hastexo</p><p>Adam Gandelman  - Canonical</p><p>Dan Wendlandt - Nicira / VMware</p></div><div class="section"><div class="titlepage"><div><div><h3 class="title"><a id="License"/>License</h3></div></div></div><pre class="programlisting">   Copyright 2012 Emilien Macchi
 

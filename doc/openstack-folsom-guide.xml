@@ -57,8 +57,10 @@
             component.</para></section>
     <section xml:id="Requirements"><info><title>Requirements</title></info>
     
-    <para>You need at least two machines (virtual or physical) with 3 NIC for controller node and 2
-            NIC for compute node. You need also to download Ubuntu 12.04 (LTS).</para>
+    <para>You need at least two machines (virtual or physical) with 3 NIC (Managment Network + VMs
+            Traffic in tunnel mode + Public Network) for controller node and 2 NIC (Managment
+            Network + VMs Traffic in tunnel mode) for compute node. You need also to download Ubuntu
+            12.04 (LTS).</para>
     <db:note xmlns:db="http://docbook.org/ns/docbook"><db:para> Run all commands as the root user</db:para></db:note>
   </section>
     <section xml:id="Controller-Node"><info><title>Controller Node</title></info>
@@ -104,14 +106,13 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# Bridged Network
+# VMs Networks
 auto eth1
-    iface eth1 inet manual
-    up ifconfig $IFACE 0.0.0.0 up
-    up ip link set $IFACE promisc on 
-    down ip link set $IFACE promisc off
-    down ifconfig $IFACE down
+    iface eth1 inet static
+    address 10.0.0.3
+    netmask 255.255.255.0
 
+# Public Bridge
 auto eth2
     iface eth2 inet manual
     up ifconfig $IFACE 0.0.0.0 up
@@ -488,10 +489,8 @@ service novnc restart</screen></para>
                     <listitem>
                         <para>Configure Open-vSwitch
                             :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-br br-eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
-ovs-vsctl add-port br-eth1 eth1
 ovs-vsctl add-port br-ex eth2</screen></para>
                     </listitem>
                 </orderedlist>
@@ -526,10 +525,16 @@ rabbit_password = password</screen></para>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
                                     file and modify
-                                    :<screen>sql_connection = mysql://quantum:password@localhost:3306/quantum
-network_vlan_ranges = default:1000:2999
+                                    :<screen>[DATABASE]
+sql_connection = mysql://quantum:password@localhost:3306/quantum
+reconnect_interval = 2
+[OVS]
+tunnel_id_ranges = 1:1000
 integration_bridge = br-int
-bridge_mappings = default:br-eth1</screen></para>
+tunnel_bridge = br-tun
+local_ip = 10.0.0.3
+[AGENT]
+root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -698,13 +703,11 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# Bridged Network
+# VMs Networks
 auto eth1
-    iface eth1 inet manual
-    up ifconfig $IFACE 0.0.0.0 up
-    up ip link set $IFACE promisc on 
-    down ip link set $IFACE promisc off
-    down ifconfig $IFACE down</screen>Then,
+    iface eth1 inet static
+    address 10.0.0.4
+    netmask 255.255.255.0</screen>Then,
                         restart network service :<screen>service networking restart</screen></para>
                     <para>
                         <db:note xmlns:db="http://docbook.org/ns/docbook">
@@ -914,19 +917,22 @@ service nova-compute restart</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure Open-vSwitch
-                            :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-br br-eth1
-ovs-vsctl add-port br-eth1 eth1</screen></para>
+                            :<screen>ovs-vsctl add-br br-int</screen></para>
                     </listitem>
                     <listitem>
                         <para>Edit <emphasis role="bold"
                                 >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
                             file and modify
-                            :<screen>sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
-network_vlan_ranges = default:1000:2999
+                            :<screen>[DATABASE]
+sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
+reconnect_interval = 2
+[OVS]
+tunnel_id_ranges = 1:1000
 integration_bridge = br-int
-bridge_mappings = default:br-eth1
-root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+tunnel_bridge = br-tun
+local_ip = 10.0.0.4
+[AGENT]
+root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
                     </listitem>
                     <listitem>
                         <para>Start the Agent
