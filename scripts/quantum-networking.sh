@@ -100,5 +100,6 @@ create_ext_net $EXT_NET_NAME $EXT_NET_CIDR $EXT_NET_BRIDGE $EXT_NET_GATEWAY $POO
 connect_tenantrouter_to_externalnetwork $ROUTER_NAME $EXT_NET_NAME
 
 # Configure br-ex to reach public network :
+ip addr flush dev $EXT_NET_BRIDGE
 ip addr add $EXT_GW_IP/$EXT_NET_LEN dev $EXT_NET_BRIDGE
 ip link set $EXT_NET_BRIDGE up
