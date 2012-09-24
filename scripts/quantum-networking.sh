@@ -85,7 +85,7 @@ create_ext_net() {
 }
 
 # Connect the Tenant Virtual Router to External Network :
-connect_TenantRouter_to_ExternalNetwork() {
+connectTenantRoutertoExternalNetwork() {
     local router_name="$1"
     local ext_net_name="$2"
 
@@ -97,7 +97,7 @@ connect_TenantRouter_to_ExternalNetwork() {
 
 create_net $TENANT_NAME $NETWORK_NAME $ROUTER_NAME $FIXED_RANGE $NETWORK_GATEWAY
 create_ext_net $EXT_NET_NAME $EXT_NET_CIDR $EXT_NET_BRIDGE $EXT_NET_GATEWAY $POOL_FLOATING_START $POOL_FLOATING_END
-connect_TenantRouter_to_ExternalNetwork $ROUTER_NAME $EXT_NET_NAME
+connectTenantRoutertoExternalNetwork $ROUTER_NAME $EXT_NET_NAME
 
 # Configure br-ex to reach public network :
 ip addr add $EXT_GW_IP/$EXT_NET_LEN dev $EXT_NET_BRIDGE
