@@ -899,7 +899,7 @@ verbose=true</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Restart Nova services
-                                    :<screen>service nova-api restart
+                                    :<screen>service nova-api-metadata restart
 service nova-compute restart</screen></para>
                             </listitem>
                         </itemizedlist>
