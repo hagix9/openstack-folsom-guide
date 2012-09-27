@@ -549,7 +549,7 @@ admin_tenant_name = service
 admin_user = quantum
 admin_password = password
 root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
-metadata_ip = 169.254.169.254 </screen></para>
+metadata_ip = 192.168.0.1</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
