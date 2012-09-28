@@ -341,9 +341,10 @@ rabbit_password = password</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Download and import <link
-                                    xlink:href="http://uec-images.ubuntu.com/releases/precise/release/ubuntu-12.04-server-cloudimg-amd64.tar.gz">Ubuntu 12.04 UEC Image</link>
+                                        xlink:href="http://uec-images.ubuntu.com/releases/precise/release/ubuntu-12.04-server-cloudimg-amd64.tar.gz"
+                                        >Ubuntu 12.04 UEC Image</link>
                                     :<screen>tar xzvf ubuntu-12.04-server-cloudimg-amd64.tar.gz
-glance add name="Ubuntu" is_public=true container_format=ovf \
+glance image-create name="Ubuntu" is_public=true container_format=ovf \
     disk_format=qcow2 &lt; precise-server-cloudimg-amd64.img</screen></para>
                             </listitem>
                             <listitem>
@@ -772,6 +773,12 @@ echo 1 > /proc/sys/net/ipv4/ip_forward </programlisting>
     "/dev/ptmx", "/dev/kvm", "/dev/kqemu",
     "/dev/rtc", "/dev/hpet","/dev/net/tun",
 ]</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Disable <emphasis role="bold">KVM default virtual
+                                        bridge</emphasis> to avoid any confusion
+                                    :<screen>virsh net-destroy default
+virsh net-undefine default</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Allow <emphasis role="bold">Live Migrations</emphasis>
