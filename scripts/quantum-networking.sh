@@ -3,6 +3,8 @@
 # Quantum Networking
 #
 # Description: Create Virtual Networking for Quantum
+# 
+# Designed for "Provider Router with Private Networks" Use-Case (http://goo.gl/JTt5n)
 #
 # Authors : 
 # Emilien Macchi / StackOps
