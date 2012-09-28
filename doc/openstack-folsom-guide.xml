@@ -43,8 +43,9 @@
                     </row>
                     <row>
                         <entry>Services</entry>
-                        <entry>MySQL, RabbitMQ, Nova, Cinder, Glance, Keystone, Quantum</entry>
-                        <entry>nova-compute, KVM, nova-api</entry>
+                        <entry>MySQL, RabbitMQ, Nova, Cinder, Glance, Keystone, Quantum,
+                            Open-vSwitch</entry>
+                        <entry>nova-compute, KVM, nova-api, Quantum Agent with Open-vSwitch</entry>
                     </row>
                 </tbody>
             </tgroup></table>
@@ -106,7 +107,7 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# VMs Networks
+# VMs Networks with OVS in tunnel mode
 auto eth1
     iface eth1 inet static
     address 10.0.0.3
@@ -121,13 +122,11 @@ auto eth2
     down ifconfig $IFACE down</screen>Then,
                         restart network service :<screen>service networking restart</screen></para>
                     <para>
-                        <db:note xmlns:db="http://docbook.org/ns/docbook">
-                            <db:para>If <emphasis role="bold">eth1</emphasis> is connected to a
-                                Switch, it should be in tagged mode.</db:para>
-                        </db:note>
                         <itemizedlist>
                             <listitem>
-                                <para>Enable <emphasis role="bold">IP forwarding</emphasis> :</para>
+                                <para>Enable <emphasis role="bold">IP forwarding</emphasis> since
+                                    this node will be a gateway between external &amp; internal
+                                    network :</para>
                             </listitem>
                         </itemizedlist>
                         <programlisting>sed -i -r 's/^\s*#(net\.ipv4\.ip_forward=1.*)/\1/' /etc/sysctl.conf
@@ -484,11 +483,12 @@ service novnc restart</screen></para>
                             :<screen>apt-get install -y openvswitch-switch</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Start Open-vSwitch service &amp; the agent
-                            :<screen>service openvswitch-switch start</screen></para>
+                        <para>Start Open-vSwitch service &amp; restart the agent
+                            :<screen>start openvswitch-switch
+restart quantum-plugin-openvswitch</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Configure Open-vSwitch
+                        <para>Configure  virtual bridging
                             :<screen>ovs-vsctl add-br br-int
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
@@ -526,7 +526,7 @@ rabbit_password = password</screen></para>
                                 <para>Edit <emphasis role="bold"
                                         >/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</emphasis>
                                     file and modify
-                                    :<screen>[DATABASE]
+                                        :<screen>[DATABASE]
 sql_connection = mysql://quantum:password@localhost:3306/quantum
 reconnect_interval = 2
 [OVS]
@@ -536,7 +536,12 @@ tunnel_bridge = br-tun
 local_ip = 10.0.0.3
 enable_tunneling = True
 [AGENT]
-root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen></para>
+root_helper = sudo /usr/bin/quantum-rootwrap /etc/quantum/rootwrap.conf</screen><db:note
+                                        xmlns:db="http://docbook.org/ns/docbook">
+                                        <db:para>It's more handy to choose <emphasis role="bold"
+                                                >tunnel mode</emphasis> since you don't have to
+                                            configure your physical switchs for VLANs.</db:para>
+                                    </db:note></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -573,8 +578,11 @@ service quantum-l3-agent restart</screen></para>
                                 xlink:href="https://github.com/EmilienM/openstack-folsom-guide/blob/master/scripts/quantum-networking.sh"
                                 >Quantum script</link>. Before launching it, you should modify
                             networking informations inside the script. All is commented and you can
-                            customize belong your
-                            needs.<screen>./quantum-networking.sh</screen></para>
+                            customize belong your needs. In this script, we actually create one
+                            tenant network with its router, and one external network connected to
+                            the tenant router. We are using the "<emphasis role="bold">Per-tenant
+                                Routers with Private Networks</emphasis>"
+                            use-case.<screen>./quantum-networking.sh</screen></para>
                     </listitem>
                 </orderedlist>
             </para>        </section>
@@ -588,14 +596,6 @@ service quantum-l3-agent restart</screen></para>
                         <para>Install the packages
                             :<screen>apt-get install -y cinder-api cinder-scheduler cinder-volume iscsitarget \
     open-iscsi iscsitarget-dkms python-cinderclient</screen></para>
-                    </listitem>
-                    <listitem>
-                        <para>Fix some packaging <link
-                                xlink:href="https://bugs.launchpad.net/cinder/+bug/1047059"
-                                >issues</link>
-                            :<screen>chown -R cinder:adm /var/log/cinder
-mkdir /usr/lib/python2.7/dist-packages/volumes
-chown -R cinder:cinder /usr/lib/python2.7/dist-packages/volumes</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure &amp; start the iSCSI services
@@ -654,12 +654,11 @@ service cinder-volume restart</screen></para>
                 <title>Horizon</title>
             </info>
                         <para>Install the packages
-                :<screen>    apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
+                :<screen>apt-get -y install apache2 libapache2-mod-wsgi openstack-dashboard \
     memcached python-memcache</screen>You
-                can now login with admin / password credentials.</para>
-            <para>If you can't see the Quota view, keep in mind that's a <link
-                    xlink:href="https://bugs.launchpad.net/horizon/+bug/1040956">bug</link> with
-                Quantum &amp; Nova API.</para>
+                can now login with <emphasis role="bold">admin</emphasis> / <emphasis role="bold"
+                    >password</emphasis> credentials or <emphasis role="bold">demo</emphasis> /
+                    <emphasis role="bold">password</emphasis>.</para>
         </section>
   </section>
     <section xml:id="Compute-Node"><info><title>Compute Node</title></info>
@@ -705,7 +704,7 @@ auto eth0
     gateway 192.168.0.254
     dns-nameservers 8.8.8.8
 
-# VMs Networks
+# VMs Networks with OVS in tunnel mode
 auto eth1
     iface eth1 inet static
     address 10.0.0.4
@@ -916,10 +915,15 @@ service nova-compute restart</screen></para>
                 <orderedlist>
                     <listitem>
                         <para>Install the packages
-                            :<screen>apt-get install -y quantum-plugin-openvswitch-agent </screen></para>
+                            :<screen>apt-get install -y quantum-plugin-openvswitch-agent</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Configure Open-vSwitch
+                        <para>Start Open-vSwitch service &amp; restart the agent
+                            :<screen>start openvswitch-switch start
+restart quantum-plugin-openvswitch-agent</screen></para>
+                    </listitem>
+                    <listitem>
+                        <para>Configure virtual bridging
                             :<screen>ovs-vsctl add-br br-int</screen></para>
                     </listitem>
                     <listitem>
