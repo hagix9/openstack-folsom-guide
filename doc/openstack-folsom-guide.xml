@@ -489,8 +489,9 @@ service novnc restart</screen></para>
 restart quantum-plugin-openvswitch</screen></para>
                     </listitem>
                     <listitem>
-                        <para>Configure  virtual bridging
+                        <para>Configure virtual bridging
                             :<screen>ovs-vsctl add-br br-int
+ovs-vsctl add-port br-int eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
 ovs-vsctl add-port br-ex eth2</screen></para>
@@ -931,7 +932,8 @@ restart quantum-plugin-openvswitch-agent</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure virtual bridging
-                            :<screen>ovs-vsctl add-br br-int</screen></para>
+                            :<screen>ovs-vsctl add-br br-int
+ovs-vsctl add-port br-int eth1</screen></para>
                     </listitem>
                     <listitem>
                         <para>Edit <emphasis role="bold"
