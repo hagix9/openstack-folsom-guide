@@ -491,7 +491,6 @@ restart quantum-plugin-openvswitch</screen></para>
                     <listitem>
                         <para>Configure virtual bridging
                             :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
 ovs-vsctl add-port br-ex eth2</screen></para>
@@ -532,6 +531,7 @@ rabbit_password = password</screen></para>
 sql_connection = mysql://quantum:password@localhost:3306/quantum
 reconnect_interval = 2
 [OVS]
+tenant_network_type = gre 
 tunnel_id_ranges = 1:1000
 integration_bridge = br-int
 tunnel_bridge = br-tun
@@ -557,7 +557,13 @@ admin_tenant_name = service
 admin_user = quantum
 admin_password = password
 root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
-metadata_ip = 192.168.0.1</screen></para>
+metadata_ip = 192.168.0.1
+use_namespaces = False</screen></para>
+                            </listitem>
+                            <listitem>
+                                <para>Edit <emphasis role="bold"
+                                        >/etc/quantum/dhcp_agent.ini</emphasis> file and add
+                                    :<screen>use_namespaces = False</screen></para>
                             </listitem>
                             <listitem>
                                 <para>Edit <emphasis role="bold"
@@ -932,8 +938,7 @@ restart quantum-plugin-openvswitch-agent</screen></para>
                     </listitem>
                     <listitem>
                         <para>Configure virtual bridging
-                            :<screen>ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1</screen></para>
+                            :<screen>ovs-vsctl add-br br-int</screen></para>
                     </listitem>
                     <listitem>
                         <para>Edit <emphasis role="bold"
@@ -943,6 +948,7 @@ ovs-vsctl add-port br-int eth1</screen></para>
 sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 reconnect_interval = 2
 [OVS]
+tenant_network_type = gre
 tunnel_id_ranges = 1:1000
 integration_bridge = br-int
 tunnel_bridge = br-tun

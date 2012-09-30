@@ -229,7 +229,6 @@ service novnc restart</pre></li></ul></div></li></ol></div><p>
                             :</p><pre class="screen">/etc/init.d/openvswitch-switch start
 restart quantum-plugin-openvswitch</pre></li><li class="listitem"><p>Configure virtual bridging
                             :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1
 ovs-vsctl add-br br-ex
 ovs-vsctl br-set-external-id br-ex bridge-id br-ex
 ovs-vsctl add-port br-ex eth2</pre></li></ol></div><p>
@@ -249,6 +248,7 @@ rabbit_password = password</pre></li><li class="listitem"><p>Edit <span class="b
 sql_connection = mysql://quantum:password@localhost:3306/quantum
 reconnect_interval = 2
 [OVS]
+tenant_network_type = gre 
 tunnel_id_ranges = 1:1000
 integration_bridge = br-int
 tunnel_bridge = br-tun
@@ -266,7 +266,9 @@ admin_tenant_name = service
 admin_user = quantum
 admin_password = password
 root_helper = sudo quantum-rootwrap /etc/quantum/rootwrap.conf
-metadata_ip = 192.168.0.1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/api-paste.ini</strong></span> file and modify
+metadata_ip = 192.168.0.1
+use_namespaces = False</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/dhcp_agent.ini</strong></span> file and add
+                                    :</p><pre class="screen">use_namespaces = False</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/api-paste.ini</strong></span> file and modify
                                     :</p><pre class="screen">admin_tenant_name = service
 admin_user = quantum 
 admin_password = password</pre></li></ul></div></li><li class="listitem"><p>Start the services
@@ -449,13 +451,13 @@ service nova-compute restart</pre></li></ul></div></li></ol></div><p>
                             :</p><pre class="screen">apt-get install -y quantum-plugin-openvswitch-agent</pre></li><li class="listitem"><p>Start Open-vSwitch service &amp; restart the agent
                             :</p><pre class="screen">/etc/init.d/openvswitch-switch start
 restart quantum-plugin-openvswitch-agent</pre></li><li class="listitem"><p>Configure virtual bridging
-                            :</p><pre class="screen">ovs-vsctl add-br br-int
-ovs-vsctl add-port br-int eth1</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
+                            :</p><pre class="screen">ovs-vsctl add-br br-int</pre></li><li class="listitem"><p>Edit <span class="bold"><strong>/etc/quantum/plugins/openvswitch/ovs_quantum_plugin.ini</strong></span>
                             file and modify
                             :</p><pre class="screen">[DATABASE]
 sql_connection = mysql://quantum:password@192.168.0.1:3306/quantum
 reconnect_interval = 2
 [OVS]
+tenant_network_type = gre
 tunnel_id_ranges = 1:1000
 integration_bridge = br-int
 tunnel_bridge = br-tun
