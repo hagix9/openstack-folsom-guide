@@ -33,7 +33,7 @@ NETWORK_GATEWAY="10.5.5.1"
 PROV_ROUTER_NAME="provider-router"
 
 # Name of External Network (Don't change it)
-EXT_NET_NAME=ext-net
+EXT_NET_NAME=ext_net
 
 # External Network addressing
 EXT_NET_CIDR="192.168.1.128/24"
