@@ -14,8 +14,9 @@
 
 ADMIN_PASSWORD=${ADMIN_PASSWORD:-password}
 SERVICE_PASSWORD=${SERVICE_PASSWORD:-$ADMIN_PASSWORD}
-export SERVICE_TOKEN="password"
-export SERVICE_ENDPOINT="http://localhost:35357/v2.0"
+CONTROLLER_HOST=${CONTROLLER_HOST:-localhost}
+export SERVICE_TOKEN="ADMIN"
+export SERVICE_ENDPOINT="http://$CONTROLLER_HOST:35357/v2.0"
 SERVICE_TENANT_NAME=${SERVICE_TENANT_NAME:-service}
 
 get_id () {
@@ -66,3 +67,6 @@ keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $QUANTUM_USER --rol
 
 CINDER_USER=$(get_id keystone user-create --name=cinder --pass="$SERVICE_PASSWORD" --tenant-id $SERVICE_TENANT --email=cinder@domain.com)
 keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $CINDER_USER --role-id $ADMIN_ROLE
+
+HEAT_USER=$(get_id keystone user-create --name=heat --pass="$SERVICE_PASSWORD" --tenant-id $SERVICE_TENANT --email=heat@domain.com)
+keystone user-role-add --tenant-id $SERVICE_TENANT --user-id $HEAT_USER --role-id $ADMIN_ROLE
