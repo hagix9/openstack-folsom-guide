@@ -111,7 +111,7 @@ keystone service-create --name swift --type object-store --description 'OpenStac
 keystone service-create --name keystone --type identity --description 'OpenStack Identity'
 keystone service-create --name ec2 --type ec2 --description 'OpenStack EC2 service'
 keystone service-create --name quantum --type network --description 'OpenStack Networking service'
-keystone service-create --name heat --type network --description 'OPenStack Heat Service'
+keystone service-create --name heat --type orchestration --description 'OPenStack Heat Service'
 
 create_endpoint () {
   case $1 in
@@ -146,7 +146,7 @@ create_endpoint () {
   esac
 }
 
-for i in compute volume image object-store identity ec2 network heat; do
+for i in compute volume image object-store identity ec2 network orchestration; do
   id=`mysql -h "$MYSQL_HOST" -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" "$MYSQL_DATABASE" -ss -e "SELECT id FROM service WHERE type='"$i"';"` || exit 1
   create_endpoint $i $id
 done
