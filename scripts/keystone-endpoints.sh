@@ -21,7 +21,7 @@ MYSQL_PASSWORD=password
 
 # Keystone definitions
 KEYSTONE_REGION=RegionOne
-SERVICE_TOKEN=password
+SERVICE_TOKEN=ADMIN
 SERVICE_ENDPOINT="http://localhost:35357/v2.0"
 
 # other definitions
