@@ -140,7 +140,7 @@ create_endpoint () {
     network)
     keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':9696/' --adminurl 'http://'"$MASTER"':9696/' --internalurl 'http://'"$MASTER"':9696/'
     ;;
-    heat)
+    orchestration)
     keystone endpoint-create --region $KEYSTONE_REGION --service-id $2 --publicurl 'http://'"$MASTER"':8000/' --adminurl 'http://'"$MASTER"':8000/' --internalurl 'http://'"$MASTER"':8000/'
     ;;
   esac
